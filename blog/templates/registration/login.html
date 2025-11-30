@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block header %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% load static %}
+
+{% block title %}Login{% endblock %}
+
+{% block extra_styles %}
+<style>
+    /* Override container styles for full-width effect */
+    main.container {
+        max-width: 100%;
+        padding: 0;
+        margin: 0;
+    }
+    .login-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh; /* Full viewport height */
+        width: 100%;
+        overflow: hidden;
+        padding: 2rem;
+    }
+    #bg-video {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        min-width: 100%;
+        min-height: 100%;
+        width: auto;
+        height: auto;
+        transform: translateX(-50%) translateY(-50%);
+        z-index: -1;
+        filter: blur(3px);
+        opacity: 0.5;
+    }
+    .login-box {
+        width: 100%;
+        max-width: 420px;
+        padding: 2.5rem;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        
+        /* Glassmorphism Effect */
+        background: rgba(var(--bs-tertiary-bg-rgb), 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+
+        /* Staggered Animation Container */
+        --stagger-delay: 100ms;
+    }
+    .login-box > * {
+        animation: fade-in-up 0.6s both;
+    }
+    /* Apply stagger delay to children */
+    .login-box > *:nth-child(1) { animation-delay: calc(1 * var(--stagger-delay)); }
+    .login-box > *:nth-child(2) { animation-delay: calc(2 * var(--stagger-delay)); }
+    .login-box > *:nth-child(3) { animation-delay: calc(3 * var(--stagger-delay)); }
+    .login-box > *:nth-child(4) { animation-delay: calc(4 * var(--stagger-delay)); }
+    .login-box > *:nth-child(5) { animation-delay: calc(5 * var(--stagger-delay)); }
+
+    .form-control-glass {
+        background-color: rgba(var(--bs-body-bg-rgb), 0.5) !important;
+        border-color: rgba(var(--bs-emphasis-color-rgb), 0.2) !important;
+    }
+    .form-control-glass:focus {
+        box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-wrapper">
+    <video playsinline autoplay muted loop id="bg-video">
+        <!-- Thay thế bằng video của bạn -->
+        <source src="https://assets.mixkit.co/videos/preview/mixkit-abstract-video-of-a-man-with-a-special-effect-4328-large.mp4" type="video/mp4">
+    </video>
+
+    <div class="login-box">
+        <div class="text-center mb-5">
+            <h1 class="h2 fw-bold">Welcome Back</h1>
+            <p class="text-body-secondary">Log in to access your world.</p>
+        </div>
+
+        {% if form.errors %}
+            <div class="alert alert-danger" role="alert">Your username and password didn't match. Please try again.</div>
+        {% endif %}
+
+        <form method="post" action="{% url 'login' %}">
+            {% csrf_token %}
+            <div class="form-floating mb-3">
+                <input type="text" name="{{ form.username.name }}" id="{{ form.username.id_for_label }}" class="form-control form-control-glass" placeholder="Username" required>
+                <label for="{{ form.username.id_for_label }}">Username</label>
+            </div>
+            <div class="form-floating mb-3">
+                <input type="password" name="{{ form.password.name }}" id="{{ form.password.id_for_label }}" class="form-control form-control-glass" placeholder="Password" required>
+                <label for="{{ form.password.id_for_label }}">Password</label>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="" id="rememberMe">
+                    <label class="form-check-label" for="rememberMe">
+                        Remember me
+                    </label>
+                </div>
+                <a href="{% url 'password_reset' %}" class="small text-decoration-none">Forgot password?</a>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg w-100">Log In</button>
+            <input type="hidden" name="next" value="{{ next }}">
+        </form>
+
+        <p class="text-center text-body-secondary mt-4 mb-0">Don't have an account? <a href="{% url 'signup' %}" class="fw-bold">Sign up</a></p>
+    </div>
+</div>
+{% endblock %}

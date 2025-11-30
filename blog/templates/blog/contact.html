@@ -1,0 +1,282 @@
+{% extends 'base.html' %}
+{% load form_filters %}
+
+{# Chỉ loại bỏ footer, header sẽ được kế thừa từ base.html #}
+{% block footer %}{% endblock %}
+{% block title %}Contact Us{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .contact-wrapper {
+        position: relative; /* Quay về position mặc định */
+        display: flex;
+        align-items: center;
+        justify-content: center; 
+        min-height: 100vh; /* Luôn chiếm ít nhất toàn bộ chiều cao màn hình */
+        width: 100%; /* Đảm bảo chiếm toàn bộ chiều rộng */
+        padding: 4rem 2rem;
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        background-size: 400% 400%;
+        animation: gradientBG 15s ease infinite;
+        will-change: background-position; /* Performance optimization */
+    }
+    @keyframes gradientBG {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* --- Simple Load-in Animations (Performance Optimized) --- */
+    @keyframes simple-zoom-in {
+        from { transform: scale(0.95); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+    @keyframes simple-fade-in-left {
+        from { transform: translateX(-30px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes simple-fade-in-right {
+        from { transform: translateX(30px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    .contact-container.load-animation {
+        animation: simple-zoom-in 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    }
+    .contact-info.load-animation {
+        animation: simple-fade-in-left 0.8s 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        opacity: 0; /* Start hidden */
+    }
+    .contact-form-panel.load-animation {
+        animation: simple-fade-in-right 0.8s 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        opacity: 0; /* Start hidden */
+    }
+
+
+    /* --- Glassmorphism Container --- */
+    .contact-container {
+        width: 100%;
+        max-width: 1100px;
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        background: rgba(var(--bs-tertiary-bg-rgb), 0.6);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        overflow: hidden; /* To contain the child elements */
+    }
+
+    /* --- Info Panel (Left Side) --- */
+    .contact-info {
+        padding: 3rem;
+        color: var(--bs-light);
+        background: rgba(0,0,0,0.2);
+    }
+    .contact-info h2 {
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+    .contact-info p {
+        color: rgba(var(--bs-light-rgb), 0.8);
+        font-size: 1.1rem;
+    }
+    .info-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        font-size: 1.1rem;
+    }
+    .info-item i {
+        font-size: 1.5rem;
+        margin-right: 1rem;
+        width: 30px;
+        text-align: center;
+        color: var(--bs-primary);
+    }
+    .social-links a {
+        color: rgba(var(--bs-light-rgb), 0.7);
+        font-size: 1.5rem;
+        margin-right: 1rem;
+        transition: color 0.3s ease, transform 0.3s ease;
+    }
+    .social-links a:hover {
+        color: var(--bs-primary);
+        transform: scale(1.2);
+    }
+
+    /* --- Form Panel (Right Side) --- */
+    .contact-form-panel {
+        padding: 3rem;
+    }
+    .contact-form-panel h2 {
+        font-weight: 700;
+        margin-bottom: 2rem;
+    }
+    .form-group {
+        position: relative;
+        margin-bottom: 2rem;
+    }
+    .form-control {
+        background-color: transparent;
+        border: none;
+        border-bottom: 2px solid rgba(var(--bs-emphasis-color-rgb), 0.3);
+        border-radius: 0;
+        padding: 10px 0;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+    }
+    .form-control:focus {
+        box-shadow: none;
+        border-bottom-color: var(--bs-primary);
+    }
+    .form-label {
+        position: absolute;
+        top: 10px;
+        left: 0;
+        pointer-events: none;
+        transition: all 0.3s ease;
+        color: var(--bs-secondary-color);
+    }
+    .form-control:focus ~ .form-label,
+    .form-control:not(:placeholder-shown) ~ .form-label {
+        top: -20px;
+        left: 0;
+        font-size: 0.85rem;
+        color: var(--bs-primary);
+    }
+    /* Hide default placeholder for our custom label to work */
+    .form-control::placeholder {
+        color: transparent;
+    }
+    .btn-submit {
+        transition: all 0.3s ease;
+    }
+    .btn-submit:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 15px rgba(var(--bs-primary-rgb), 0.4);
+    }
+</style>
+{% endblock %}
+
+{% block main_content %}
+<!-- Container for AJAX success message -->
+<div id="success-overlay" class="fullscreen-message-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease; z-index: -1;">
+    <div class="alert alert-success" role="alert" style="max-width: 80%; text-align: center;">
+        <h4 class="alert-heading">Thank You!</h4>
+        <p id="success-message-text"></p>
+        <hr>
+        <p class="mb-0">I'll get back to you as soon as possible.</p>
+    </div>
+</div>
+
+<div class="contact-wrapper">
+    <div class="contact-container load-animation">
+        <div class="row g-0">
+            <!-- Left Side: Info -->
+            <div class="col-lg-5 contact-info load-animation">
+                <h2>Get In Touch</h2>
+                <p>I'd love to hear from you! Whether you have a question, feedback, or just want to say hello, feel free to reach out.</p>
+                <div class="info-item">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    <span>Ho Chi Minh City, Vietnam</span>
+                </div>
+                <div class="info-item">
+                    <i class="bi bi-envelope-fill"></i>
+                    <span>quanghuyvu131211@gmail.com</span>
+                </div>
+                <div class="mt-5">
+                    <p class="fw-bold">Follow Us</p>
+                    <div class="social-links">
+                        <a href="https://www.facebook.com/qhuy131211" title="Facebook"><i class="bi bi-facebook"></i></a>
+                        <a href="https://www.tiktok.com/@sybau2514" title="Tiktok"><i class="bi bi-tiktok"></i></a>
+                        <a href="https://www.youtube.com/@Tool2011" title="Youtube"><i class="bi bi-youtube"></i></a>
+                        <a href="https://github.com/Quanghuy13111" title="Github"><i class="bi bi-github"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Form -->
+            <div class="col-lg-7 contact-form-panel load-animation">
+                <h2>Send a Message</h2>
+                <form id="contact-form" method="post" class="post-form" novalidate>
+                    {% csrf_token %}
+                    
+                    <!-- Name Field -->
+                    <div class="form-group">
+                        {{ form.name|attr:"class:form-control|placeholder:Your Name" }}
+                        <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
+                    </div>
+
+                    <!-- Email Field -->
+                    <div class="form-group">
+                        {{ form.email|attr:"class:form-control|placeholder:Your Email" }}
+                        <label for="{{ form.email.id_for_label }}" class="form-label">{{ form.email.label }}</label>
+                    </div>
+
+                    <!-- Message Field -->
+                    <div class="form-group">
+                        {{ form.message|attr:"class:form-control|rows:4|placeholder:Your Message" }}
+                        <label for="{{ form.message.id_for_label }}" class="form-label">{{ form.message.label }}</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg rounded-pill w-100 mt-4 btn-submit">Send Message</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('contact-form');
+    const submitButton = form.querySelector('.btn-submit');
+    const successOverlay = document.getElementById('success-overlay');
+    const successMessageText = document.getElementById('success-message-text');
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault(); // Ngăn chặn việc gửi form theo cách truyền thống
+
+        // Vô hiệu hóa nút gửi và hiển thị spinner
+        submitButton.disabled = true;
+        submitButton.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...`;
+
+        const formData = new FormData(form);
+
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest', // Header quan trọng để Django nhận biết AJAX
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Hiển thị thông báo thành công
+                successMessageText.textContent = data.message;
+                successOverlay.style.display = 'flex';
+                successOverlay.style.zIndex = '1060'; // Đặt z-index cao để hiển thị trên cùng
+                setTimeout(() => successOverlay.style.opacity = '1', 10); // Fade in
+
+                // Ẩn form đi
+                document.querySelector('.contact-container').style.display = 'none';
+            } else {
+                // Xử lý lỗi (ví dụ: hiển thị lỗi validation)
+                // Trong ví dụ này, chúng ta chỉ đơn giản là bật lại nút
+                console.error('Form errors:', data.errors);
+                alert('An error occurred. Please check your input and try again.');
+                submitButton.disabled = false;
+                submitButton.innerHTML = 'Send Message';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('A server error occurred. Please try again later.');
+            // Bật lại nút gửi
+            submitButton.disabled = false;
+            submitButton.innerHTML = 'Send Message';
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,469 @@
+/* ---
+   Facebook Inspired Stylesheet for SereneBlog
+   --- */
+
+/* 1. CSS Variables & Root Styles
+-------------------------------------------------- */
+:root {
+    /* Font */
+    --font-sans-serif: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-serif: 'Lora', Georgia, serif;
+
+    /* Light Theme */
+    --bg-color-light: #f0f2f5; /* Facebook's light gray background */
+    --secondary-bg-color-light: #ffffff;
+    --text-color-light: #050505;
+    --secondary-text-color-light: #65676b;
+    --border-color-light: #e4e6eb;
+    --accent-color-light: #1877f2; /* Facebook Blue */
+    --accent-color-hover-light: #166fe5;
+    --shadow-light: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+
+    /* Dark Theme */
+    --bg-color-dark: #18191a;
+    --secondary-bg-color-dark: #242526;
+    --text-color-dark: #f5f5f7;
+    --secondary-text-color-dark: #b0b3b8;
+    --border-color-dark: #3e4042;
+    --accent-color-dark: #2e89ff;
+    --accent-color-hover-dark: #1b74e4;
+    --shadow-dark: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+[data-bs-theme="light"] {
+    --bg-color: var(--bg-color-light);
+    --secondary-bg-color: var(--secondary-bg-color-light);
+    --text-color: var(--text-color-light);
+    --secondary-text-color: var(--secondary-text-color-light);
+    --border-color: var(--border-color-light);
+    --accent-color: var(--accent-color-light);
+    --accent-color-hover: var(--accent-color-hover-light);
+    --shadow: var(--shadow-light);
+    --secondary-bg-color-rgb: 255, 255, 255;
+    --accent-color-rgb: 24, 119, 242;
+}
+
+[data-bs-theme="dark"] {
+    --bg-color: var(--bg-color-dark);
+    --secondary-bg-color: var(--secondary-bg-color-dark);
+    --text-color: var(--text-color-dark);
+    --secondary-text-color: var(--secondary-text-color-dark);
+    --border-color: var(--border-color-dark);
+    --accent-color: var(--accent-color-dark);
+    --accent-color-hover: var(--accent-color-hover-dark);
+    --shadow: var(--shadow-dark);
+    --secondary-bg-color-rgb: 36, 37, 38;
+    --accent-color-rgb: 46, 137, 255;
+}
+
+body {
+    font-family: var(--font-sans-serif);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* 2. Base Components & Typography
+-------------------------------------------------- */
+h1, h2, h3, h4, h5, h6, .navbar-brand {
+    font-family: var(--font-sans-serif);
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+p, li {
+    font-family: var(--font-serif);
+    color: var(--secondary-text-color);
+    line-height: 1.7;
+}
+
+a {
+    color: var(--accent-color);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+a:hover {
+    color: var(--accent-color-hover);
+}
+
+/* Accessibility: Improved focus outline */
+a:focus-visible, button:focus-visible, input:focus-visible, .form-check-input:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+.card, .dropdown-menu, .form-control, .btn {
+    border-radius: 16px; /* More rounded corners */
+    border: none; /* Remove borders, use shadows for separation */
+    background-color: var(--secondary-bg-color);
+    transition: all 0.3s ease;
+}
+
+.card {
+    box-shadow: var(--shadow);
+    overflow: hidden; /* Ensure content respects border-radius */
+}
+
+/* 3. Header & Navigation
+-------------------------------------------------- */
+header {
+    background-color: rgba(var(--secondary-bg-color-rgb), 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(var(--text-color-rgb, 0, 0, 0), 0.1);
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.nav-link {
+    font-weight: 500;
+    color: var(--secondary-text-color);
+    transition: color 0.2s ease;
+}
+
+.nav-link:hover, .nav-link.active {
+    color: var(--text-color);
+}
+
+/* Search input */
+.form-control {
+    background-color: var(--bg-color); /* Match body background */
+    border: 1px solid var(--border-color);
+}
+.form-control:focus {
+    background-color: var(--secondary-bg-color);
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(var(--accent-color-rgb), 0.25);
+}
+
+/* Dropdown menu */
+.dropdown-menu {
+    padding: 0.5rem;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+}
+
+.dropdown-item {
+    border-radius: 8px;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+}
+
+[data-bs-theme="dark"] .dropdown-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+
+/* --- BẮT ĐẦU: CSS MỚI CHO THANH TÌM KIẾM --- */
+
+.search-container {
+    position: relative; /* Cần thiết để định vị input */
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; /* Đẩy icon về phía bên phải */
+    height: 40px; /* Đặt chiều cao cố định để giao diện ổn định */
+}
+
+.search-form {
+    display: flex;
+    align-items: center;
+}
+
+.search-icon-label {
+    cursor: pointer;
+    font-size: 1.2rem; /* Kích thước icon */
+    color: var(--text-color);
+    z-index: 2; /* Đảm bảo icon luôn nằm trên input */
+    padding: 0 0.5rem; /* Khoảng đệm cho icon */
+}
+
+.search-input {
+    width: 0;
+    opacity: 0;
+    padding: 0.5rem 0.5rem 0.5rem 2.5rem; /* Padding trái để không bị chữ đè lên icon */
+    border: 1px solid transparent;
+    border-radius: 20px;
+    position: absolute; /* Định vị tuyệt đối so với .search-container */
+    right: 0;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: width 0.4s ease, opacity 0.4s ease, border-color 0.4s ease;
+}
+.search-container:hover .search-input,
+.search-input:focus {
+    width: 200px; /* Chiều rộng khi mở rộng */
+    opacity: 1;
+    border-color: var(--border-color); /* Hiển thị viền khi mở rộng */
+}
+
+/* --- KẾT THÚC: CSS MỚI CHO THANH TÌM KIẾM --- */
+
+/* 4. Main Content & Cards
+-------------------------------------------------- */
+.post-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.post-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.16), 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+[data-bs-theme="dark"] .post-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.post-card .card-img-top {
+    border-radius: 12px 12px 0 0;
+}
+
+main {
+    flex: 1; /* Allow main content to grow and push footer down */
+}
+
+/* Post Detail Page Specifics */
+.post-detail-card .card-header {
+    border-bottom: none;
+}
+.post-title {
+    font-family: var(--font-sans-serif);
+    font-size: 2.25rem;
+    font-weight: 800;
+}
+.post-content {
+    font-family: var(--font-serif);
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--text-color);
+}
+.post-actions-footer hr {
+    border-top-color: var(--border-color);
+}
+.post-action-buttons .btn {
+    color: var(--secondary-text-color);
+    font-weight: 600;
+    border-radius: 8px;
+    flex-grow: 1;
+}
+.post-action-buttons .btn:hover {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+/* Style for the liked button */
+.post-action-buttons .btn.liked .like-icon {
+    color: #e0245e; /* A nice red/pink color for the heart */
+    animation: heart-pop 0.3s ease;
+}
+.tag-badge {
+    background-color: var(--bg-color) !important;
+    color: var(--secondary-text-color) !important;
+    padding: 0.5em 0.9em;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+.tag-badge:hover {
+    background-color: var(--border-color) !important;
+}
+.tag-badge::before {
+    content: '#';
+    margin-right: 2px;
+}
+
+/* Comment Section */
+.comment-form-container textarea {
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
+}
+.comment-bubble {
+    background-color: var(--bg-color);
+    border-radius: 18px;
+    padding: 0.5rem 1rem;
+    width: fit-content;
+}
+.comment-bubble p {
+    font-family: var(--font-sans-serif);
+    color: var(--text-color);
+    margin-bottom: 0;
+    line-height: 1.5;
+}
+.comment-body .text-body-secondary {
+    font-size: 0.8rem;
+}
+
+/* 5. Buttons
+-------------------------------------------------- */
+.btn {
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    border-radius: 2rem; /* Pill shape */
+    border: none;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-primary {
+    background-color: var(--accent-color);
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background-color: var(--accent-color-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(var(--accent-color-rgb), 0.3);
+}
+
+.btn-primary:active {
+    transform: translateY(0); /* Đưa nút về vị trí gốc khi nhấn, tạo cảm giác "lún" xuống từ trạng thái hover */
+    box-shadow: 0 2px 8px rgba(var(--accent-color-rgb), 0.25); /* Giảm bóng đổ khi nhấn */
+    transition: transform 0.1s ease, box-shadow 0.1s ease; /* Hiệu ứng nhấn nhanh hơn */
+}
+
+.btn-secondary {
+    background-color: var(--secondary-bg-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background-color: var(--bg-color);
+}
+
+.btn-secondary:active {
+    transform: translateY(1px); /* Dịch chuyển nút xuống 1px */
+    transition: transform 0.1s ease;
+}
+
+/* 6. Animations & Effects
+-------------------------------------------------- */
+
+/* Loading Spinner */
+#loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--border-color);
+    border-top-color: var(--accent-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes heart-pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+}
+/* Scroll-triggered Animations */
+.animate-on-scroll {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.animate-on-scroll.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Disable animations if user prefers */
+body.animations-disabled .animate-on-scroll {
+    opacity: 1;
+    transform: none;
+    transition: none;
+}
+body.animations-disabled .post-card:hover {
+    transform: none;
+}
+
+/* 7. Footer
+-------------------------------------------------- */
+footer {
+    border-top: 1px solid var(--border-color);
+    background-color: var(--secondary-bg-color);
+    padding: 1rem 0; /* Giảm thêm khoảng đệm để footer nhỏ hơn */
+    font-size: 0.85rem; /* Giảm cỡ chữ cho nội dung footer */
+}
+
+footer a {
+    /* Thêm 'transform' vào transition để hiệu ứng mượt mà */
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+footer a:hover {
+    /* Thêm gạch chân và hiệu ứng nhấc lên một chút khi di chuột */
+    text-decoration: underline;
+    transform: translateY(-1px);
+}
+
+/* Copyright Section in Footer */
+.copyright-section p {
+    font-size: 0.9rem; /* Tăng kích thước chữ lên một chút */
+    color: var(--secondary-text-color);
+    font-family: var(--font-sans-serif); /* Dùng font không chân cho dễ đọc */
+}
+
+/* Social Icons in Footer */
+.social-icons {
+    display: flex;
+    gap: 1rem; /* Khoảng cách giữa các icon */
+    justify-content: center; /* Căn giữa trên màn hình nhỏ */
+}
+@media (min-width: 992px) { /* lg breakpoint */
+    .social-icons {
+        justify-content: flex-start; /* Căn trái trên màn hình lớn */
+    }
+}
+.social-icon i {
+    font-size: 1.25rem; /* Giảm kích thước icon */
+}
+
+/* 8. Scroll to Top Button
+-------------------------------------------------- */
+#scrollToTopBtn {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    z-index: 1030; /* Should be on top of most elements */
+    width: 50px;
+    height: 50px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+    transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+}
+
+#scrollToTopBtn.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}

@@ -1,0 +1,454 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_styles %}
+<style>
+    /* Các style này đã được chuyển vào base.html */
+    .fade-in { opacity: 0; transform: translateY(20px); } /* Giữ lại nếu chỉ dùng ở about */
+    .fade-in.is-visible { opacity: 1; transform: translateY(0); } /* Giữ lại nếu chỉ dùng ở about */
+    .fade-in-left { opacity: 0; transform: translateX(-40px); }
+    .fade-in-left.is-visible { opacity: 1; transform: translateX(0); }
+    .fade-in-right { opacity: 0; transform: translateX(40px); }
+    .fade-in-right.is-visible { opacity: 1; transform: translateX(0); }
+
+    /* --- Typing Effect --- */
+    .typing-cursor {
+        display: inline-block;
+        width: 8px;
+        height: 1.2em;
+        background-color: currentColor;
+        animation: blink 0.7s infinite;
+        margin-left: 4px;
+    }
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+    }
+
+    /* --- Skill Bar --- */
+    .skill-bar .progress {
+        height: 20px;
+        border-radius: 10px;
+        background-color: #e9ecef;
+    }
+    .skill-bar .progress-bar {
+        width: 0;
+        transition: width 2s cubic-bezier(0.25, 0.1, 0.25, 1);
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding-right: 10px;
+    }
+    .skill-bar .skill-level {
+        font-weight: bold;
+        transition: opacity 1s 1s;
+        opacity: 0;
+    }
+    .skill-bar.is-visible .skill-level {
+        opacity: 1;
+    }
+
+    /* --- Icons Hover Effect --- */
+    .icon-hover i {
+        transition: transform 0.3s ease, color 0.3s ease;
+    }
+    .icon-hover i:hover {
+        transform: scale(1.2);
+        color: var(--bs-primary) !important;
+    }
+
+    /* --- Section Header Animation --- */
+    .section-header {
+        /* Không cần thuộc tính nào ở đây nữa */
+    }
+    .header-mask {
+        display: inline-block;
+        position: relative;
+        overflow: hidden;
+    }
+    .header-text {
+        display: inline-block;
+        transform: translateY(100%);
+        transition: transform 1s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    .header-mask.is-visible .header-text {
+        transform: translateY(0);
+    }
+
+    /* --- Parallax Section --- */
+    .parallax-section {
+        background-image: url('https://images.unsplash.com/photo-1505240343339-33f06c1b1b57?q=80&w=2070&auto=format&fit=crop'); /* Ảnh nền mặc định, bạn có thể thay đổi */
+        min-height: 400px;
+        background-attachment: fixed;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+        position: relative;
+        color: white;
+    }
+    .parallax-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* --- New Timeline Style --- */
+    .timeline {
+        position: relative;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    .timeline::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 50%;
+        margin-left: -2px;
+        width: 4px;
+        background-color: var(--bs-primary);
+        height: 100%;
+        border-radius: 2px;
+    }
+    .timeline-item {
+        padding: 10px 40px;
+        position: relative;
+        width: 50%;
+    }
+    .timeline-item.left { left: 0; }
+    .timeline-item.right { left: 50%; }
+    .timeline-item::after {
+        content: '';
+        position: absolute;
+        width: 25px;
+        height: 25px;
+        background-color: var(--bs-body-bg);
+        border: 4px solid var(--bs-primary);
+        top: 25px;
+        border-radius: 50%;
+        z-index: 1;
+    }
+    .timeline-item.left::after { right: -12.5px; }
+    .timeline-item.right::after { left: -12.5px; }
+    .timeline-content {
+        padding: 20px 30px;
+        background-color: var(--bs-body-tertiary);
+        position: relative;
+        border-radius: 8px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+
+    /* --- New Project Section Style --- */
+    .project-card-new {
+        background-color: var(--bs-body-tertiary);
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .project-card-new:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+    }
+    .project-image {
+        object-fit: cover;
+        height: 100%;
+    }
+    .tech-tag {
+        display: flex;
+        align-items: center;
+    }
+
+    /* --- Lightbox Gallery --- */
+    .gallery-item { cursor: pointer; transition: transform 0.3s ease; }
+    .gallery-item:hover { transform: scale(1.05); }
+    .lightbox { display: none; position: fixed; z-index: 9999; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); justify-content: center; align-items: center; }
+    .lightbox img { max-width: 90%; max-height: 80%; }
+    .lightbox .close-lightbox { position: absolute; top: 20px; right: 35px; color: #fff; font-size: 40px; font-weight: bold; cursor: pointer; }
+</style>
+{% endblock %}
+
+{% block title %}About Me - SereneBlog{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Section: Introduction -->
+    <div class="row align-items-center g-5 mb-5">
+        <div class="col-lg-4 text-center animate-on-scroll zoom-in">
+            <!--
+                HƯỚNG DẪN FIX LỖI ẢNH:
+                1. Đặt ảnh của bạn vào thư mục: blog/static/blog/images/profile.jpg
+                2. Xóa dòng src của placehold.co bên dưới.
+                3. Bỏ comment (xóa {% comment %} và {% endcomment %}) cho dòng src của {% static ... %} để sử dụng ảnh của bạn.
+            -->
+            <img src="https://placehold.co/250x250/0D6EFD/white?text=Huy" class="img-fluid rounded-circle shadow-lg" alt="Ảnh đại diện của Huy" style="max-width: 250px; height: 250px; object-fit: cover;">
+            {% comment %} <img src="{% static 'blog/images/profile.jpg' %}" class="img-fluid rounded-circle shadow-lg" alt="Ảnh đại diện của Huy" style="max-width: 250px; height: 250px; object-fit: cover;"> {% endcomment %}
+        </div>
+        <div class="col-lg-8 animate-on-scroll fade-in-up">
+            <h1 class="display-4 fw-bold" id="typing-heading"></h1>
+            <p class="lead text-body-secondary mb-4">A little bit about the person behind the posts.</p>
+            <p class="fs-5">Hello! 👋 I’m Huy, the creator and author of SereneBlog. I'm a passionate developer with a love for clean code, intuitive design, and sharing knowledge with the tech community.</p>
+        </div>
+    </div>
+
+    <!-- Language Tabs -->
+    <ul class="nav nav-tabs nav-fill mb-4" id="aboutTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="vietnamese-tab" data-bs-toggle="tab" data-bs-target="#vietnamese-content" type="button" role="tab" aria-controls="vietnamese-content" aria-selected="true">Tiếng Việt</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="english-tab" data-bs-toggle="tab" data-bs-target="#english-content" type="button" role="tab" aria-controls="english-content" aria-selected="false">English</button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="aboutTabContent">
+        <!-- Vietnamese Content -->
+        <div class="tab-pane fade show active" id="vietnamese-content" role="tabpanel" aria-labelledby="vietnamese-tab">
+            <div class="py-5 my-5 bg-body-tertiary rounded-3 p-4 p-lg-5 animate-on-scroll zoom-in">
+                <h2 class="display-5 fw-bold"><i class="bi bi-bullseye me-2"></i>Sứ Mệnh Của Tôi</h2>
+                <p class="fs-5 col-lg-10">Blog này là khu vườn số của tôi, một nơi tôi ghi lại hành trình của mình trong thế giới phát triển web không ngừng thay đổi. Mục tiêu của tôi là chia nhỏ các chủ đề phức tạp—từ backend Django đến các framework frontend hiện đại—thành những bài hướng dẫn rõ ràng, thiết thực có thể giúp bạn trên con đường học tập của riêng mình.</p>
+            </div>
+
+            <div class="py-5 my-5 animate-on-scroll fade-in-up">
+                <div class="section-header">
+                    <div class="header-mask animate-on-scroll">
+                        <h2 class="display-5 fw-bold header-text"><i class="bi bi-lightbulb me-2"></i>Triết Lý Của Tôi</h2>
+                    </div>
+                </div>
+                <div class="row mt-4 fs-5">
+                    <div class="col-md-6 col-lg-4 mb-3"><p><strong>1. Học Tập Suốt Đời:</strong> Công nghệ không bao giờ đứng yên, và tôi cũng vậy. Tôi tin rằng chìa khóa để phát triển là sự tò mò và không ngừng học hỏi.</p></div>
+                    <div class="col-md-6 col-lg-4 mb-3"><p><strong>2. Chất Lượng Hơn Số Lượng:</strong> Tôi tập trung vào việc tạo ra những nội dung sâu sắc, được nghiên cứu kỹ lưỡng thay vì chạy theo số lượng.</p></div>
+                    <div class="col-md-12 col-lg-4 mb-3"><p><strong>3. Sức Mạnh Của Cộng Đồng:</strong> Chia sẻ kiến thức là cách tốt nhất để học hỏi. Tôi luôn sẵn lòng kết nối và hỗ trợ các lập trình viên khác.</p></div>
+                </div>
+            </div>
+
+            <div class="row g-4 py-5 my-5 align-items-center animate-on-scroll fade-in-up">
+                <div class="col-lg-7">
+                    <h2 class="display-5 fw-bold"><i class="bi bi-cup-hot me-2"></i>Ngoài Công Việc</h2>
+                    <p class="fs-5">Khi không ngồi trước bàn phím, bạn có thể thấy tôi đang khám phá những địa điểm mới với chiếc máy ảnh, đắm mình trong một cuốn sách hay, hoặc theo dõi một trận bóng đá. Thần tượng của tôi là Cristiano Ronaldo và Real Madrid là câu lạc bộ tôi yêu thích. Tôi tin rằng sự sáng tạo và cảm hứng có thể được tìm thấy ở khắp mọi nơi.</p>
+                </div>
+                <div class="col-lg-5 text-center fs-1 d-flex justify-content-around text-body-secondary icon-hover">
+                    <i class="bi bi-camera" title="Nhiếp ảnh"></i>
+                    <i class="bi bi-book" title="Đọc sách"></i>
+                    <i class="bi bi-cup-hot" title="Cà phê"></i>
+                    <i class="bi bi-football" title="Bóng đá"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- English Content -->
+        <div class="tab-pane fade" id="english-content" role="tabpanel" aria-labelledby="english-tab">
+            <div class="py-5 my-5 bg-body-tertiary rounded-3 p-4 p-lg-5 animate-on-scroll zoom-in">
+                <h2 class="display-5 fw-bold"><i class="bi bi-bullseye me-2"></i>My Mission</h2>
+                <p class="fs-5 col-lg-10">This blog is my digital garden, a place where I document my journey through the ever-evolving world of web development. My goal is to break down complex topics—from Django backends to modern front-end frameworks—into clear, practical tutorials that can help you on your own learning path.</p>
+            </div>
+
+            <div class="py-5 my-5 animate-on-scroll fade-in-up">
+                <div class="section-header">
+                    <div class="header-mask animate-on-scroll">
+                        <h2 class="display-5 fw-bold header-text"><i class="bi bi-lightbulb me-2"></i>My Philosophy</h2>
+                    </div>
+                </div>
+                <div class="row mt-4 fs-5">
+                    <div class="col-md-6 col-lg-4 mb-3"><p><strong>1. Lifelong Learning:</strong> Technology never stands still, and neither do I. I believe the key to growth is curiosity and continuous learning.</p></div>
+                    <div class="col-md-6 col-lg-4 mb-3"><p><strong>2. Quality Over Quantity:</strong> I focus on creating in-depth, well-researched content rather than chasing quantity.</p></div>
+                    <div class="col-md-12 col-lg-4 mb-3"><p><strong>3. The Power of Community:</strong> Sharing knowledge is the best way to learn. I'm always open to connecting with and helping other developers.</p></div>
+                </div>
+            </div>
+
+            <div class="row g-4 py-5 my-5 align-items-center animate-on-scroll fade-in-up">
+                <div class="col-lg-7">
+                    <h2 class="display-5 fw-bold"><i class="bi bi-cup-hot me-2"></i>Beyond the Code</h2>
+                    <p class="fs-5">When I'm not at my keyboard, you can find me exploring new places with my camera, getting lost in a good book, or watching a football match. My idol is Cristiano Ronaldo and my favorite club is Real Madrid. I believe that creativity and inspiration can be found everywhere.</p>
+                </div>
+                <div class="col-lg-5 text-center fs-1 d-flex justify-content-around text-body-secondary icon-hover">
+                    <i class="bi bi-camera" title="Photography"></i>
+                    <i class="bi bi-book" title="Reading"></i>
+                    <i class="bi bi-cup-hot" title="Coffee"></i>
+                    <i class="bi bi-football" title="Football"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section: Parallax Glimpse of Life -->
+    <div class="parallax-section my-5">
+        <div class="parallax-overlay">
+            <div class="container text-center animate-on-scroll fade-in-up">
+                <div class="section-header d-inline-block">
+                    <div class="header-mask animate-on-scroll">
+                        <h2 class="display-4 fw-bold header-text">Góc Nhìn Cuộc Sống</h2>
+                    </div>
+                </div>
+                <p class="fs-4 mt-3 col-lg-8 mx-auto">
+                    Ngoài những dòng code, tôi đang sống tại TP. Hồ Chí Minh, một thành phố không bao giờ ngủ.
+                    Tôi tìm thấy sự cân bằng bằng cách dậy sớm, tận hưởng không khí trong lành buổi sáng với một tách cà phê, và lên kế hoạch cho ngày mới.
+                    Đối với tôi, lập trình không chỉ là công việc, đó là nghệ thuật giải quyết vấn đề và kiến tạo giá trị.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section: My Journey -->
+    <div class="my-5 py-5">
+        <div class="text-center mb-5 section-header">
+            <div class="header-mask animate-on-scroll">
+                <h2 class="display-5 fw-bold header-text"><i class="bi bi-map me-2"></i>Hành Trình Của Tôi</h2>
+            </div>
+        </div>
+        <div class="timeline">
+            <div class="timeline-item left animate-on-scroll fade-in-left">
+                <div class="timeline-content">
+                    <h3 class="h5 fw-bold"><i class="bi bi-flag-fill text-primary me-2"></i>2020 - Khởi Đầu</h3>
+                    <p>Những dòng code "Hello, World!" đầu tiên với Python. Say mê với khả năng biến ý tưởng thành hiện thực và bắt đầu tìm hiểu sâu hơn về lập trình web.</p>
+                </div>
+            </div>
+            <div class="timeline-item right animate-on-scroll fade-in-right">
+                <div class="timeline-content">
+                    <h3 class="h5 fw-bold"><i class="bi bi-compass text-primary me-2"></i>2022 - Khám Phá Django</h3>
+                    <p>Lần đầu tiếp xúc với Django và ngay lập tức bị thu hút bởi cấu trúc mạnh mẽ và triết lý "Batteries-included" của nó. Xây dựng những dự án cá nhân đầu tiên.</p>
+                </div>
+            </div>
+            <div class="timeline-item left animate-on-scroll fade-in-left">
+                <div class="timeline-content">
+                    <h3 class="h5 fw-bold"><i class="bi bi-pencil-square text-primary me-2"></i>2024 - SereneBlog Ra Đời</h3>
+                    <p>Tạo ra blog này như một cách để hệ thống hóa kiến thức, chia sẻ những gì đã học và kết nối với cộng đồng lập trình viên.</p>
+                </div>
+            </div>
+            <div class="timeline-item right animate-on-scroll fade-in-right">
+                <div class="timeline-content">
+                    <h3 class="h5 fw-bold"><i class="bi bi-rocket-takeoff-fill text-primary me-2"></i>Tương Lai - Luôn Học Hỏi</h3>
+                    <p>Thế giới công nghệ luôn thay đổi. Tôi cam kết không ngừng học hỏi, khám phá các công nghệ mới và chia sẻ hành trình đó tại đây.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section: Featured Projects (3D Flip Cards) -->
+    <div class="my-5 py-5">
+        <div class="text-center mb-5 section-header">
+            <div class="header-mask animate-on-scroll">
+                <h2 class="display-5 fw-bold header-text"><i class="bi bi-journal-code me-2"></i>Dự Án Tâm Đắc</h2>
+            </div>
+        </div>
+        <div class="row g-5">
+            <!-- Project 1: SereneBlog -->
+            <div class="col-12 animate-on-scroll fade-in-up">
+                <div class="project-card-new">
+                    <div class="row g-0">
+                        <div class="col-lg-5">
+                            <img src="https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=2070&auto=format&fit=crop" class="project-image w-100" alt="SereneBlog Project">
+                        </div>
+                        <div class="col-lg-7 d-flex flex-column p-4 p-lg-5">
+                            <h3 class="fw-bold">Project To-do List</h3>
+                            <p class="text-body-secondary flex-grow-1">Chính trang blog bạn đang xem! Xây dựng với Django, Bootstrap 5 và một chút ma thuật từ JavaScript để tạo ra một không gian chia sẻ kiến thức cá nhân, tối ưu và dễ quản lý.</p>
+                            <div class="d-flex flex-wrap gap-2 mb-4">
+                                <span class="badge rounded-pill text-bg-primary tech-tag"><i class="bi bi-filetype-py me-1"></i> Django</span>
+                                <span class="badge rounded-pill text-bg-info tech-tag"><i class="bi bi-bootstrap me-1"></i> Bootstrap 5</span>
+                                <span class="badge rounded-pill text-bg-warning tech-tag"><i class="bi bi-filetype-js me-1"></i> JavaScript</span>
+                            </div>
+                            <a href="https://github.com/Quanghuy13111/to-do-list" class="btn btn-primary align-self-start">Xem trên GitHub <i class="bi bi-arrow-right-short"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Project 2: E-commerce Platform -->
+            <div class="col-12 animate-on-scroll fade-in-up">
+                <div class="project-card-new">
+                    <div class="row g-0">
+                        <div class="col-lg-7 d-flex flex-column p-4 p-lg-5 order-lg-first">
+                            <h3 class="fw-bold">E-commerce Platform</h3>
+                            <p class="text-body-secondary flex-grow-1">Dự án mô phỏng một trang web bán hàng hoàn chỉnh với giỏ hàng, thanh toán, quản lý sản phẩm, sử dụng Django Rest Framework và ReactJS.</p>
+                            <div class="d-flex flex-wrap gap-2 mb-4">
+                                <span class="badge rounded-pill text-bg-dark tech-tag"><i class="bi bi-filetype-py me-1"></i> DRF</span>
+                                <span class="badge rounded-pill text-bg-success tech-tag"><i class="bi bi-filetype-jsx me-1"></i> ReactJS</span>
+                                <span class="badge rounded-pill text-bg-danger tech-tag"><i class="bi bi-database me-1"></i> PostgreSQL</span>
+                            </div>
+                            <a href="#" class="btn btn-success align-self-start">Xem trên GitHub <i class="bi bi-arrow-right-short"></i></a>
+                        </div>
+                        <div class="col-lg-5 order-first">
+                            <img src="https://images.unsplash.com/photo-1522204523234-8729aa6e3d5f?q=80&w=2070&auto=format&fit=crop" class="project-image w-100" alt="E-commerce Project">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Section: Tech Stack -->
+    <div id="tech-stack-section" class="my-5 py-5">
+        <div class="text-center mb-5 section-header">
+            <div class="header-mask animate-on-scroll">
+                <h2 class="display-5 fw-bold header-text"><i class="bi bi-code-slash me-2"></i>My Tech Stack</h2>
+            </div>
+        </div>
+        <div class="row g-4 justify-content-center">
+            <!-- Bạn có thể thay đổi giá trị data-level để thể hiện mức độ thành thạo của mình (0-100) -->
+            <div class="col-md-10 col-lg-8 skill-bar animate-on-scroll fade-in-up" data-level="90">
+                <div class="d-flex justify-content-between"><span><i class="bi bi-filetype-py me-2"></i>Python & Django</span><span class="skill-level">90%</span></div>
+                <div class="progress mt-2"><div class="progress-bar bg-primary" role="progressbar"></div></div>
+            </div>
+            <div class="col-md-10 col-lg-8 skill-bar animate-on-scroll fade-in-up" data-level="80">
+                <div class="d-flex justify-content-between"><span><i class="bi bi-filetype-js me-2"></i>JavaScript</span><span class="skill-level">80%</span></div>
+                <div class="progress mt-2"><div class="progress-bar bg-warning text-dark" role="progressbar"></div></div>
+            </div>
+            <div class="col-md-10 col-lg-8 skill-bar animate-on-scroll fade-in-up" data-level="95">
+                <div class="d-flex justify-content-between"><span><i class="bi bi-filetype-html me-2"></i>HTML5 & CSS3</span><span class="skill-level">95%</span></div>
+                <div class="progress mt-2"><div class="progress-bar bg-danger" role="progressbar"></div></div>
+            </div>
+            <div class="col-md-10 col-lg-8 skill-bar animate-on-scroll fade-in-up" data-level="85">
+                <div class="d-flex justify-content-between"><span><i class="bi bi-bootstrap me-2"></i>Bootstrap</span><span class="skill-level">85%</span></div>
+                <div class="progress mt-2"><div class="progress-bar bg-info text-dark" role="progressbar"></div></div>
+            </div>
+            <div class="col-md-10 col-lg-8 skill-bar animate-on-scroll fade-in-up" data-level="75">
+                <div class="d-flex justify-content-between"><span><i class="bi bi-database me-2"></i>PostgreSQL / SQLite</span><span class="skill-level">75%</span></div>
+                <div class="progress mt-2"><div class="progress-bar bg-secondary" role="progressbar"></div></div>
+            </div>
+            <div class="col-md-10 col-lg-8 skill-bar animate-on-scroll fade-in-up" data-level="85">
+                <div class="d-flex justify-content-between"><span><i class="bi bi-git me-2"></i>Git & GitHub</span><span class="skill-level">85%</span></div>
+                <div class="progress mt-2"><div class="progress-bar bg-dark" role="progressbar"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section: Gallery -->
+    <div class="my-5 py-5">
+        <div class="text-center mb-5 section-header">
+            <div class="header-mask animate-on-scroll">
+                <h2 class="display-5 fw-bold header-text"><i class="bi bi-images me-2"></i>Thư Viện Khoảnh Khắc</h2>
+            </div>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4"><img src="https://images.unsplash.com/photo-1511556532299-8f662fc26c06?q=80&w=2070&auto=format&fit=crop" alt="Hobby Image 1" class="img-fluid rounded shadow gallery-item animate-on-scroll zoom-in"></div>
+            <div class="col-md-4"><img src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=1887&auto=format&fit=crop" alt="Hobby Image 2" class="img-fluid rounded shadow gallery-item animate-on-scroll zoom-in" style="transition-delay: 0.2s;"></div>
+            <div class="col-md-4"><img src="https://images.unsplash.com/photo-1627843563095-f6e94676cfe3?q=80&w=1887&auto=format&fit=crop" alt="Hobby Image 3" class="img-fluid rounded shadow gallery-item animate-on-scroll zoom-in" style="transition-delay: 0.4s;"></div>
+        </div>
+    </div>
+
+    <!-- Lightbox Modal -->
+    <div id="lightbox" class="lightbox">
+        <span class="close-lightbox">&times;</span>
+        <img class="lightbox-content" id="lightbox-img">
+    </div>
+
+    <!-- Section: Connect -->
+    <div class="text-center py-5 my-5 animate-on-scroll fade-in-up">
+        <h2 class="display-5 fw-bold mb-4">Connect With Me</h2>
+        <p class="lead text-body-secondary mb-4">Feel free to reach out, I'm always happy to connect!</p>
+        <div class="d-flex justify-content-center gap-4 fs-2 icon-hover">
+            <a href="https://github.com/Quanghuy13111" class="link-body-emphasis" title="GitHub"><i class="bi bi-github"></i></a>
+            <a href="https://www.tiktok.com/@sybau2514" class="link-body-emphasis" title="Tiktok"><i class="bi bi-tiktok"></i></a>
+            <a href="https://www.facebook.com/qhuy131211" class="link-body-emphasis" title="Facebook"><i class="bi bi-facebook"></i></a>
+            <a href="https://www.youtube.com/@Tool13337" class="link-body-emphasis" title="Youtube"><i class="bi bi-youtube"></i></a>
+            <a href="{% url 'blog:contact' %}" class="link-body-emphasis" title="Email Me"><i class="bi bi-envelope"></i></a>
+        </div>
+    </div>
+</div>
+{% endblock %}

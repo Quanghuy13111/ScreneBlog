@@ -1,0 +1,34 @@
+{% for reply in comment.replies.all %}
+<div class="comment-item d-flex align-items-start mt-3 ms-4" id="comment-{{ reply.id }}">
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-person-circle text-body-secondary me-2 flex-shrink-0" viewBox="0 0 16 16"><path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/><path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/></svg>
+    <div class="comment-body w-100">
+        <div class="comment-bubble">
+            <a href="{% url 'blog:public_user_profile' reply.author %}" class="fw-bold text-decoration-none text-body">{{ reply.author }}</a>
+            <p class="mb-0">{{ reply.body|linebreaksbr }}</p>
+        </div>
+        <div class="comment-actions small text-body-secondary ms-2">
+            <span>{{ reply.created|timesince }} ago</span>
+            ·
+            <a href="{% url 'blog:like_comment' reply.id %}" 
+               class="like-comment-btn text-decoration-none {% if reply.id in user_liked_comment_ids %}liked{% endif %}" 
+               data-comment-id="{{ reply.id }}">
+                <i class="bi {% if reply.id in user_liked_comment_ids %}bi-heart-fill{% else %}bi-heart{% endif %}"></i> Like
+            </a>
+            <span class="like-count" data-count="{{ reply.likes }}">{{ reply.likes }}</span>
+
+            · <a href="#" class="reply-btn text-decoration-none" data-comment-id="{{ reply.id }}">Reply</a>
+            {% if user == reply.author or user == reply.post.author %}
+            · <a href="{% url 'blog:delete_comment' reply.id %}" 
+                 class="delete-comment-btn text-decoration-none text-danger" 
+                 data-comment-id="{{ reply.id }}">Delete</a>
+            {% endif %}
+        </div>
+        <!-- Vùng chứa form trả lời cho bình luận con -->
+        <div class="reply-form-container mt-2" id="reply-form-container-{{ reply.id }}" style="display: none;"></div>
+        <!-- Vùng chứa các trả lời của bình luận con (đệ quy) -->
+        <div class="replies mt-3">
+            {% with comment=reply %}{% include "blog/_comment.html" %}{% endwith %}
+        </div>
+    </div>
+</div>
+{% endfor %}

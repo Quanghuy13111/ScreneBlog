@@ -1,0 +1,489 @@
+{% load static %}
+{% load compress %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Serene Blog{% endblock %}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+    {% compress css %}
+        <!-- Custom CSS -->
+        <link rel="stylesheet" href="{% static 'blog/css/style.css' %}">
+        <style>
+            /* --- General Animation & Base --- */
+            .animate-on-scroll {
+                opacity: 0;
+                visibility: hidden;
+                transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+            }
+            .fade-in-up { opacity: 0; transform: translateY(40px); }
+            .zoom-in { opacity: 0; transform: scale(0.9); }
+            .fade-in-left { opacity: 0; transform: translateX(-40px); }
+            .fade-in-right { opacity: 0; transform: translateX(40px); }
+            
+            .is-visible {
+                opacity: 1;
+                transform: none;
+                visibility: visible;
+            }
+            .animate-on-scroll.is-visible {
+                opacity: 1;
+                transform: none;
+                visibility: visible;
+            }
+            /* Live Search Results */
+            .live-search-results {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                z-index: 1000;
+                max-height: 300px;
+                overflow-y: auto;
+                background-color: var(--bs-body-bg);
+                border: 1px solid var(--bs-border-color);
+                border-top: none;
+                border-radius: 0 0 var(--bs-border-radius) var(--bs-border-radius);
+                box-shadow: var(--bs-box-shadow);
+            }
+            .live-search-results .list-group-item {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            /* --- Comment Highlight --- */
+            .comment-highlight {
+                background-color: rgba(var(--bs-primary-rgb), 0.15);
+                border-radius: var(--bs-border-radius);
+                padding: 10px;
+                margin-left: -10px;
+                margin-right: -10px;
+                transition: background-color 1.5s ease-out;
+            }
+            /* --- Announcement Bar --- */
+            #announcement-bar {
+                padding: 0.75rem 1.25rem;
+                position: relative;
+                z-index: 1031; /* Above header but below modals */
+                display: none; /* Hidden by default, shown by JS */
+            }
+            #announcement-bar .btn-close {
+                position: absolute;
+                top: 50%;
+                right: 1.25rem;
+                transform: translateY(-50%);
+            }
+            #announcement-bar a {
+                text-decoration: underline;
+                font-weight: bold;
+            }
+        </style>
+    {% endcompress %}
+    {% block extra_styles %}{% endblock %}
+
+    <!-- Theme Switcher Script - Placed in <head> to prevent FOUC -->
+    <script>
+        (function() {
+            const getStoredTheme = () => localStorage.getItem('theme');
+            const getPreferredTheme = () => {
+                const storedTheme = getStoredTheme();
+                if (storedTheme) {
+                    return storedTheme;
+                }
+                // Check OS preference
+                return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            };
+            // Set theme on the root <html> element immediately
+            document.documentElement.setAttribute('data-bs-theme', getPreferredTheme());
+        })();
+    </script>
+</head>
+<body>
+    <!-- Loading Spinner -->
+    <div id="loader">
+        <div class="spinner"></div>
+    </div>
+
+    {% if active_announcement %}
+    <div id="announcement-bar" class="alert alert-{{ active_announcement.level }} rounded-0 border-0 mb-0 text-center" role="alert" data-announcement-id="{{ active_announcement.id }}">
+        <div class="container">
+            {{ active_announcement.content|safe }}
+            {% if active_announcement.link %}
+                <a href="{{ active_announcement.link }}" class="alert-link ms-2">Learn More</a>
+            {% endif %}
+            <button type="button" class="btn-close" aria-label="Close" id="close-announcement-btn"></button>
+        </div>
+    </div>
+    {% endif %}
+
+
+    {% block header %}
+    <header class="sticky-top py-2 bg-body-tertiary border-bottom shadow-sm">
+        <nav class="container navbar navbar-expand-lg align-items-center">
+            <a class="navbar-brand" href="{% url 'blog:home' %}">SereneBlog</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link px-2" href="{% url 'blog:home' %}">Home</a></li>
+                    <li class="nav-item"><a class="nav-link px-2" href="{% url 'blog:about' %}">About</a></li>
+                    <li class="nav-item"><a class="nav-link px-2" href="{% url 'blog:contact' %}">Contact</a></li>
+                </ul>
+                <!-- Live Search Form -->
+                <form class="d-flex me-3 position-relative" role="search" method="get" action="{% url 'blog:search' %}">
+                    <input id="liveSearchInput" class="form-control" type="search" name="q" placeholder="Search..." aria-label="Search">
+                    <div id="liveSearchResults" class="live-search-results d-none">
+                        <div class="list-group list-group-flush">
+                            <!-- Results will be injected here by JS -->
+                        </div>
+                    </div>
+                </form>
+                 <div class="d-flex align-items-center">
+                    <div class="dropdown text-end">
+                        <a href="#" class="d-block link-body-emphasis text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" aria-label="User menu">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16"><path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/><path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/></svg>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end text-small shadow">
+                            {% if user.is_authenticated %}
+                                <li><a class="dropdown-item" href="{% url 'blog:post_create' %}">New post</a></li>
+                                <li><a class="dropdown-item" href="{% url 'blog:user_profile' %}">Profile & Settings</a></li>
+                                {% if user.is_staff %}
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><h6 class="dropdown-header">Admin Tools</h6></li>
+                                    <li><a class="dropdown-item" href="{% url 'admin:index' %}">Admin Panel</a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'logout' %}">Sign out</a></li>
+                            {% else %}
+                                <li><h6 class="dropdown-header">Guest Account</h6></li>
+                                <li><a class="dropdown-item" href="{% url 'login' %}">Log In</a></li>
+                                <li><a class="dropdown-item" href="{% url 'signup' %}">Sign Up</a></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li class="dropdown-item d-flex align-items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-moon-stars-fill" viewBox="0 0 16 16">
+                                    <path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278z"/>
+                                    <path d="M10.794 3.148a.217.217 0 0 1 .412 0l.387 1.162h1.212a.217.217 0 0 1 .162.328l-1.001.724.387 1.162a.217.217 0 0 1-.328.244l-1.001-.724-1.001.724a.217.217 0 0 1-.328-.244l.387-1.162-1.001-.724a.217.217 0 0 1 .162-.328h1.212l.387-1.162zM13.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.156 1.156 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.156 1.156 0 0 0-.732-.732l-.774-.258a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732L13.863.1z"/>
+                                </svg>
+                                <div class="form-check form-switch ms-auto">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="themeSwitch" title="Toggle theme">
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+    {% endblock %}
+
+    {% block main_content %}
+        <main class="container my-5">
+            <div class="content-wrapper">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    {% endblock main_content %}
+
+    {% block footer %}
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="appToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto">Notification</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body"></div>
+        </div>
+    </div>
+    <!-- Scroll to Top Button -->
+    <a href="#" id="scrollToTopBtn" class="btn btn-primary rounded-circle" title="Go to top">
+        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-arrow-up-short" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5
+ 0 0 0 .5.5z"/>
+        </svg>
+    </a>
+    {% include 'blog/_footer.html' %}
+    {% endblock %}
+    {% compress js %}
+        <!-- Bootstrap JS -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    {% endcompress %}
+    <!-- Custom JS -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Vô hiệu hóa tính năng tự động khôi phục vị trí cuộn của trình duyệt
+            // để tránh xung đột với các hiệu ứng animation khi tải lại trang.
+            if ('scrollRestoration' in history) {
+                history.scrollRestoration = 'manual';
+            }
+
+            // Hide loader when content is loaded
+            const loader = document.getElementById('loader');
+            if(loader) {
+                loader.style.display = 'none';
+            }
+
+            // --- Toast Helper Function ---
+            const toastEl = document.getElementById('appToast');
+            const toastBody = toastEl.querySelector('.toast-body');
+            const appToast = new bootstrap.Toast(toastEl);
+            window.showToast = (message) => {
+                toastBody.textContent = message;
+                appToast.show();
+            };
+
+            // --- Announcement Bar Logic ---
+            const announcementBar = document.getElementById('announcement-bar');
+            if (announcementBar) {
+                const announcementId = announcementBar.dataset.announcementId;
+                const dismissedId = localStorage.getItem('dismissedAnnouncementId');
+
+                // Show bar only if it's a new announcement
+                if (announcementId !== dismissedId) {
+                    announcementBar.style.display = 'block';
+                }
+
+                const closeBtn = document.getElementById('close-announcement-btn');
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', () => {
+                        announcementBar.style.display = 'none';
+                        // Store the ID of the dismissed announcement in localStorage
+                        localStorage.setItem('dismissedAnnouncementId', announcementId);
+                    });
+                }
+            }
+
+            // --- Theme Switcher Logic ---
+            const themeSwitch = document.getElementById('themeSwitch');
+            if (themeSwitch) {
+                // Set switch state based on current theme
+                themeSwitch.checked = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+
+                themeSwitch.addEventListener('change', (e) => {
+                    const newTheme = e.target.checked ? 'dark' : 'light';
+                    // Update attribute on <html> and save to localStorage
+                    document.documentElement.setAttribute('data-bs-theme', newTheme);
+                    localStorage.setItem('theme', newTheme);
+                });
+            }
+
+            // --- Scroll-triggered Animations ---
+            const animationObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) entry.target.classList.add('is-visible');
+                });
+            }, { threshold: 0.1 });
+            document.querySelectorAll('.animate-on-scroll').forEach(el => animationObserver.observe(el));
+
+            // --- Live Search Logic ---
+            const searchInput = document.getElementById('liveSearchInput');
+            const resultsContainer = document.getElementById('liveSearchResults');
+            const resultsList = resultsContainer.querySelector('.list-group');
+            let searchTimeout;
+
+            if (searchInput && resultsContainer && resultsList) {
+                searchInput.addEventListener('input', () => {
+                    clearTimeout(searchTimeout);
+                    const query = searchInput.value.trim();
+
+                    if (query.length > 2) {
+                        searchTimeout = setTimeout(() => {
+                            fetch(`{% url 'blog:live_search' %}?q=${encodeURIComponent(query)}`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    resultsList.innerHTML = ''; // Clear previous results
+                                    if (data.results.length > 0) {
+                                        data.results.forEach(item => {
+                                            const a = document.createElement('a');
+                                            a.href = item.url;
+                                            a.className = 'list-group-item list-group-item-action';
+                                            a.textContent = item.title;
+                                            resultsList.appendChild(a);
+                                        });
+                                        resultsContainer.classList.remove('d-none');
+                                    } else {
+                                        resultsContainer.classList.add('d-none');
+                                    }
+                                })
+                                .catch(error => console.error('Live search error:', error));
+                        }, 300); // Debounce for 300ms
+                    } else {
+                        resultsList.innerHTML = '';
+                        resultsContainer.classList.add('d-none');
+                    }
+                });
+
+                // Hide results when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!searchInput.contains(e.target)) {
+                        resultsContainer.classList.add('d-none');
+                    }
+                });
+            }
+
+            // --- Highlight Comment from URL Hash ---
+            const highlightComment = () => {
+                const hash = window.location.hash;
+                if (hash && hash.startsWith('#comment-')) {
+                    const commentElement = document.querySelector(hash);
+                    if (commentElement) {
+                        // Smooth scroll to the comment
+                        commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                        // Add highlight class
+                        commentElement.classList.add('comment-highlight');
+
+                        // Remove highlight after a few seconds
+                        setTimeout(() => {
+                            commentElement.classList.remove('comment-highlight');
+                        }, 3000); // Highlight for 3 seconds                        
+                    }
+                }
+            }
+            // Gọi hàm để kiểm tra và làm nổi bật bình luận
+            highlightComment();
+
+            // --- Comment Like Logic ---
+            document.body.addEventListener('click', function(e) {
+                // Tìm phần tử a.like-comment-btn gần nhất với mục tiêu click
+                const likeBtn = e.target.closest('.like-comment-btn');
+                if (likeBtn) {
+                    e.preventDefault();
+                    const commentId = likeBtn.dataset.commentId;
+                    const url = likeBtn.href;
+                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                    })
+                    .then(response => {
+                        if (response.status === 401) { // Login required
+                            window.showToast('Please log in to like comments.');
+                            return null;
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data && data.status === 'success') {
+                            const icon = likeBtn.querySelector('i');
+                            const countSpan = likeBtn.nextElementSibling;
+
+                            // Cập nhật số lượt like
+                            countSpan.textContent = data.likes;
+                            countSpan.dataset.count = data.likes;
+
+                            // Cập nhật trạng thái nút
+                            if (data.liked) {
+                                likeBtn.classList.add('liked');
+                                icon.classList.replace('bi-heart', 'bi-heart-fill');
+                            } else {
+                                likeBtn.classList.remove('liked');
+                                icon.classList.replace('bi-heart-fill', 'bi-heart');
+                            }
+                        }
+                    }).catch(error => console.error('Error liking comment:', error));
+                }
+            });
+            // --- Scroll to Top Button Logic ---
+            const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+            if (scrollToTopBtn) {
+                window.addEventListener('scroll', () => {
+                    if (window.scrollY > 300) { // Show button after scrolling 300px
+                        scrollToTopBtn.classList.add('show');
+                    } else {
+                        scrollToTopBtn.classList.remove('show');
+                    }
+                });
+
+                scrollToTopBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            }
+
+            // --- ABOUT PAGE SPECIFIC LOGIC ---
+            // Typing Effect
+            const headingElement = document.getElementById('typing-heading');
+            if (headingElement) {
+                const typingText = "About SereneBlog & Me";
+                let i = 0;
+                headingElement.innerHTML = '<span class="typing-cursor"></span>';
+                function typeWriter() {
+                    if (i < typingText.length) {
+                        headingElement.innerHTML = typingText.substring(0, i + 1) + '<span class="typing-cursor"></span>';
+                        i++;
+                        setTimeout(typeWriter, 100);
+                    } else {
+                        setTimeout(() => {
+                            const cursor = headingElement.querySelector('.typing-cursor');
+                            if (cursor) cursor.style.display = 'none';
+                        }, 2000);
+                    }
+                }
+                setTimeout(typeWriter, 500);
+            }
+
+            // --- Skill Bar Animation with Counter (for about page) ---
+            const skillBarCounterObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    // Thêm kiểm tra để đảm bảo các phần tử con tồn tại
+                    const progressBar = entry.target.querySelector('.progress-bar');
+                    const skillLevelSpan = entry.target.querySelector('.skill-level');
+
+                    if (entry.isIntersecting && !entry.target.dataset.animated && progressBar && skillLevelSpan) {
+                        const level = entry.target.getAttribute('data-level');
+                        progressBar.style.width = level + '%';
+
+                        let currentLevel = 0;
+                        const interval = setInterval(() => {
+                            currentLevel++;
+                            if (currentLevel >= parseInt(level)) {
+                                currentLevel = level;
+                                clearInterval(interval);
+                            }
+                            skillLevelSpan.textContent = currentLevel + '%';
+                        }, 20);
+
+                        entry.target.dataset.animated = true; // Mark as animated
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.5 });
+            
+            const skillBars = document.querySelectorAll('.skill-bar');
+            if (skillBars.length > 0) {
+                skillBars.forEach(bar => skillBarCounterObserver.observe(bar));
+            }
+
+            // Lightbox Gallery (for about page)
+            const lightbox = document.getElementById('lightbox');
+            if (lightbox) {
+                const lightboxImg = document.getElementById('lightbox-img');
+                const galleryItems = document.querySelectorAll('.gallery-item');
+                const closeLightboxBtn = document.querySelector('.close-lightbox');
+                const closeLbx = () => lightbox.style.display = 'none';
+
+                galleryItems.forEach(item => item.addEventListener('click', () => { lightbox.style.display = 'flex'; lightboxImg.src = item.src; }));
+                closeLightboxBtn.addEventListener('click', closeLbx);
+                lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLbx(); });
+            }
+
+        });
+    </script>
+</body>
+</html>

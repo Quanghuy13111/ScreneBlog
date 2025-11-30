@@ -1,0 +1,562 @@
+{% extends "base.html" %}
+
+{# Loại bỏ header và footer mặc định #}
+{% block header %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block title %}Create Your Account{% endblock %}
+
+{% load static %}
+{% block extra_styles %}
+<style>
+    body {
+        padding-top: 0; /* Ghi đè padding từ header bị ẩn */
+        padding-bottom: 0; /* Ghi đè padding từ footer bị ẩn */
+    }
+    .signup-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh; /* Full viewport height */
+        width: 100%;
+        overflow: hidden;
+        padding: 2rem;
+        background: linear-gradient(135deg, #1a237e, #3f51b5, #7e57c2, #d81b60);
+        background-size: 400% 400%;
+        animation: gradientBG 15s ease infinite;
+    }
+    @keyframes gradientBG {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* --- Aurora Effect --- */
+    .signup-wrapper::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: radial-gradient(circle at var(--mouse-x) var(--mouse-y), rgba(255, 255, 255, 0.1), transparent 30%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none; /* Important */
+    }
+    .signup-wrapper:hover::before {
+        opacity: 1;
+    }
+
+    /* --- Form Container --- */
+    #multiStepForm {
+        position: relative;
+        width: 100%;
+        max-width: 500px;
+        overflow: hidden;
+        padding: 3rem;
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        background: rgba(var(--bs-tertiary-bg-rgb), 0.6);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    #multiStepForm:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    /* --- Progress Indicator --- */
+    .progress-indicator {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 2.5rem;
+        position: relative;
+    }
+    .progress-indicator::before {
+        content: '';
+        position: absolute;
+        top: 15px; /* Half of step-dot height */
+        left: 15px; /* Half of step-dot width */
+        right: 15px; /* Half of step-dot width */
+        height: 2px;
+        background-color: rgba(var(--bs-emphasis-color-rgb), 0.2);
+        z-index: -2;
+    }
+    #progress-line {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        right: 15px;
+        height: 2px;
+        background-color: var(--bs-primary);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.5s ease-in-out;
+        z-index: -1;
+    }
+    .step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        position: relative; /* Add relative positioning for z-index to work */
+    }
+    .step-dot {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background-color: var(--bs-tertiary-bg);
+        border: 2px solid rgba(var(--bs-emphasis-color-rgb), 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        transition: all 0.4s ease;
+        margin-bottom: 0.5rem;
+    }
+    .step-label {
+        font-size: 0.8rem;
+        color: var(--bs-secondary-color);
+        transition: color 0.4s ease;
+    }
+    .step.active .step-dot {
+        background-color: var(--bs-primary);
+        border-color: var(--bs-primary);
+        color: var(--bs-light);
+        transform: scale(1.1);
+    }
+    .step.active .step-label {
+        color: var(--bs-emphasis-color);
+        font-weight: 500;
+    }
+
+    /* --- Form Steps & Animations --- */
+    .form-step {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        display: none; /* Ẩn theo mặc định */
+    }
+    .form-step.active {
+        display: block;
+        animation: slide-in 0.5s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .form-step.exiting-forward {
+        animation: slide-out-forward 0.5s forwards cubic-bezier(0.55, 0.085, 0.68, 0.53);
+    }
+    .form-step.exiting-backward {
+        animation: slide-out-backward 0.5s forwards cubic-bezier(0.55, 0.085, 0.68, 0.53);
+    }
+
+    @keyframes slide-in {
+        from { transform: translateX(var(--slide-direction, 100%)); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slide-out-forward {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(-100%); opacity: 0; }
+    }
+    @keyframes slide-out-backward {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+
+    /* --- Form Elements --- */
+    .form-floating > .form-control {
+        background-color: rgba(var(--bs-body-bg-rgb), 0.5) !important;
+        border-color: rgba(var(--bs-emphasis-color-rgb), 0.2) !important;
+        transition: border-color 0.3s ease;
+    }
+    .form-floating > .form-control:focus {
+        border-color: var(--bs-primary) !important;
+        box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.3);
+    }
+
+    /* --- Buttons --- */
+    .btn-circle {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        transition: all 0.3s ease;
+    }
+    .btn-circle:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    #submitBtn {
+        transition: all 0.3s ease;
+    }
+    #submitBtn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 20px rgba(var(--bs-success-rgb), 0.4);
+    }
+
+    /* --- Final Step --- */
+    .final-step-content {
+        text-align: center;
+        padding: 2rem 0;
+    }
+    .final-step-content .icon {
+        font-size: 4rem;
+        color: var(--bs-success);
+        animation: pop-in 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+    }
+    @keyframes pop-in {
+        0% { transform: scale(0); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    .review-details strong {
+        word-break: break-all;
+        text-align: right;
+        padding-left: 1rem;
+    }
+
+    /* --- Password Toggle --- */
+    .password-toggle-group .input-group-text {
+        background-color: transparent;
+        border-left: 0;
+    }
+    .password-toggle-group .password-toggle-icon {
+        cursor: pointer;
+        z-index: 5;
+    }
+
+</style>
+{% endblock %}
+
+{% block main_content %}
+<div class="signup-wrapper">
+    <form id="multiStepForm" method="post" action="{% url 'signup' %}" novalidate onsubmit="handleFormSubmit(event)">
+        <div class="text-center mb-4">
+            <h1 class="h2 fw-bold">Join SereneBlog</h1>
+            <p class="text-body-secondary">Your creative journey begins now.</p>
+        </div>
+
+        <!-- Progress Indicator -->
+        <div class="progress-indicator">
+            <div id="progress-line"></div>
+            <div class="step active" data-step="0">
+                <div class="step-dot">1</div>
+                <div class="step-label">Account</div>
+            </div>
+            <div class="step" data-step="1">
+                <div class="step-dot">2</div>
+                <div class="step-label">Password</div>
+            </div>
+            <div class="step" data-step="2">
+                <div class="step-dot">3</div>
+                <div class="step-label">Finish</div>
+            </div>
+        </div>
+
+        <!-- Form Steps Wrapper -->
+        <div id="form-content" style="position: relative; min-height: 240px;">
+            {% csrf_token %}
+            <!-- Step 1: Account Info -->
+            <div class="form-step active" id="step1">
+                <h3 class="h5 fw-normal mb-3">Account Details</h3>
+                <div class="form-floating mb-3">
+                    <input type="text" name="{{ form.username.name }}" id="{{ form.username.id_for_label }}" class="form-control {% if form.username.errors %}is-invalid{% endif %}" placeholder="Username" required>
+                    <label for="{{ form.username.id_for_label }}">Username</label>
+                    {% for error in form.username.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="form-floating mb-3">
+                    {# Giả sử bạn đã thêm trường email vào form #}
+                    <input type="email" name="{{ form.email.name }}" id="{{ form.email.id_for_label }}" class="form-control {% if form.email.errors %}is-invalid{% endif %}" placeholder="Email Address" required>
+                    <label for="{{ form.email.id_for_label }}">Email Address</label>
+                    {% for error in form.email.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Step 2: Password -->
+            <div class="form-step" id="step2">
+                <h3 class="h5 fw-normal mb-3">Set a Secure Password</h3>
+                <div class="input-group password-toggle-group has-validation mb-3">
+                    <div class="form-floating {% if form.password1.errors %}is-invalid{% endif %}">
+                        <input type="password" name="{{ form.password1.name }}" id="{{ form.password1.id_for_label }}" class="form-control {% if form.password1.errors %}is-invalid{% endif %}" placeholder="Password" required>
+                        <label for="{{ form.password1.id_for_label }}">Password</label>
+                    </div>
+                    <span class="input-group-text"><i class="bi bi-eye-slash password-toggle-icon" data-target="{{ form.password1.id_for_label }}"></i></span>
+                    {% for error in form.password1.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="input-group password-toggle-group has-validation mb-3">
+                    <div class="form-floating {% if form.password2.errors %}is-invalid{% endif %}">
+                        <input type="password" name="{{ form.password2.name }}" id="{{ form.password2.id_for_label }}" class="form-control {% if form.password2.errors %}is-invalid{% endif %}" placeholder="Confirm Password" required>
+                        <label for="{{ form.password2.id_for_label }}">Confirm Password</label>
+                    </div>
+                    <span class="input-group-text"><i class="bi bi-eye-slash password-toggle-icon" data-target="{{ form.password2.id_for_label }}"></i></span>
+                    <div class="invalid-feedback d-block client-side-error" style="display: none;"></div>
+                    {% for error in form.password2.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% for error in form.non_field_errors %}
+                    <div class="alert alert-danger mt-3">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <!-- Step 3: Finish -->
+            <div class="form-step" id="step3">
+                <h3 class="h5 fw-normal mb-4">Review Your Details</h3>
+                <div class="review-details list-group">
+                    <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-start-0 border-end-0 px-0">
+                        <span class="text-body-secondary">Username</span>
+                        <strong id="reviewUsername" class="text-emphasis"></strong>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-start-0 border-end-0 px-0">
+                        <span class="text-body-secondary">Email Address</span>
+                        <strong id="reviewEmail" class="text-emphasis"></strong>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-start-0 border-end-0 px-0">
+                        <span class="text-body-secondary">Password</span>
+                        <strong class="text-emphasis">********</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <button type="button" class="btn btn-secondary btn-circle" id="prevBtn" style="display: none;"><i class="bi bi-arrow-left"></i></button>
+            <button type="button" class="btn btn-primary rounded-pill px-4 ms-auto" id="nextBtn">Next <i class="bi bi-arrow-right ms-1"></i></button>
+            <button type="submit" class="btn btn-success rounded-pill px-5" id="submitBtn" style="display: none;">Create Account</button>
+        </div>
+
+        <p class="text-center text-body-secondary mt-4 mb-0 pb-2">Already have an account? <a href="{% url 'login' %}" class="fw-bold text-decoration-none">Log in</a></p>
+    </form>
+</div>
+
+<script>
+    // --- Form Submission Handler ---
+    async function handleFormSubmit(event) {
+        event.preventDefault(); // Ngăn chặn việc gửi form theo cách truyền thống
+        const form = event.target;
+        const submitBtn = form.querySelector('#submitBtn');
+
+        // Vô hiệu hóa nút để tránh click nhiều lần
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Creating...`;
+
+        try {
+            const formData = new FormData(form);
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest', // Báo cho server biết đây là request AJAX
+                },
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.status === 'success') {
+                // Đăng ký thành công, hiển thị thông báo và chuyển hướng
+                if (window.showToast) {
+                    window.showToast('Account created successfully! Redirecting to login...');
+                }
+                // Chờ một chút để người dùng đọc toast rồi mới chuyển hướng
+                setTimeout(() => {
+                    window.location.href = data.redirect_url;
+                }, 2000);
+            } else {
+                // Có lỗi từ server, hiển thị thông báo
+                if (window.showToast) {
+                    window.showToast('An error occurred. Please check the form and try again.');
+                }
+                // Kích hoạt lại nút submit
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Create Account';
+            }
+        } catch (error) {
+            console.error('Submission error:', error);
+            if (window.showToast) window.showToast('A network error occurred. Please try again.');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Create Account';
+        }
+    }
+
+document.addEventListener('DOMContentLoaded', function() {
+    // --- Aurora Effect ---
+    const wrapper = document.querySelector('.signup-wrapper');
+    wrapper.addEventListener('mousemove', e => {
+        wrapper.style.setProperty('--mouse-x', e.clientX + 'px');
+        wrapper.style.setProperty('--mouse-y', e.clientY + 'px');
+    });
+
+    // --- Password Toggle Logic ---
+    document.querySelectorAll('.password-toggle-icon').forEach(toggle => {
+        toggle.addEventListener('click', function() {
+            const targetInputId = this.getAttribute('data-target');
+            const targetInput = document.getElementById(targetInputId);
+
+            if (targetInput.type === 'password') {
+                targetInput.type = 'text';
+                this.classList.remove('bi-eye-slash');
+                this.classList.add('bi-eye');
+            } else {
+                targetInput.type = 'password';
+                this.classList.remove('bi-eye');
+                this.classList.add('bi-eye-slash');
+            }
+        });
+    });
+    // --- Multi-Step Form Logic ---
+    const form = document.getElementById('multiStepForm');
+    const steps = Array.from(form.querySelectorAll('.form-step'));
+    const progressSteps = Array.from(form.querySelectorAll('.progress-indicator .step'));
+    const progressLine = document.getElementById('progress-line');
+    const nextBtn = document.getElementById('nextBtn');
+    const prevBtn = document.getElementById('prevBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    let currentStep = 0;
+
+    function updateButtons() {
+        prevBtn.style.display = currentStep === 0 ? 'none' : 'inline-flex';
+        nextBtn.style.display = currentStep === steps.length - 1 ? 'none' : 'inline-flex';
+        submitBtn.style.display = currentStep === steps.length - 1 ? 'inline-flex' : 'none';
+        // No longer need to adjust parent width
+    }
+
+    function goToStep(stepIndex, direction = 'forward') {
+        if (stepIndex < 0 || stepIndex >= steps.length) return;
+
+        const currentStepEl = steps[currentStep];
+        const nextStepEl = steps[stepIndex];
+
+        // Áp dụng lớp animation thoát cho bước hiện tại
+        currentStepEl.classList.add(direction === 'forward' ? 'exiting-forward' : 'exiting-backward');
+
+        // Đặt hướng slide cho bước tiếp theo
+        nextStepEl.style.setProperty('--slide-direction', direction === 'forward' ? '100%' : '-100%');
+        nextStepEl.classList.add('active');
+        
+        setTimeout(() => {
+            currentStepEl.classList.remove('active', 'exiting-forward', 'exiting-backward');
+            currentStep = stepIndex;
+            updateButtons();
+            updateProgress();
+        }, 500); // Match animation duration
+    }
+
+    function updateProgress() {
+        progressSteps.forEach((step, idx) => {
+            if (idx <= currentStep) {
+                step.classList.add('active');
+            } else {
+                step.classList.remove('active');
+            }
+        });
+        const totalSteps = steps.length - 1;
+        const progressPercentage = totalSteps > 0 ? (currentStep / totalSteps) * 100 : 0;
+        progressLine.style.transform = `scaleX(${progressPercentage / 100})`;
+    }
+    
+    function populateReviewDetails() {
+        const usernameInput = document.getElementById('{{ form.username.id_for_label }}');
+        const emailInput = document.getElementById('{{ form.email.id_for_label }}');
+        
+        document.getElementById('reviewUsername').textContent = usernameInput.value || 'Not provided';
+        document.getElementById('reviewEmail').textContent = emailInput.value || 'Not provided';
+    }
+
+    function validateStep(stepIndex) {
+        const currentStepEl = steps[stepIndex];
+        const inputs = Array.from(currentStepEl.querySelectorAll('input[required]'));
+        let isValid = true;
+
+        // 1. Reset all previous validation states on the current step
+        inputs.forEach(input => {
+            input.classList.remove('is-invalid');
+        });
+        currentStepEl.querySelectorAll('.client-side-error').forEach(el => {
+            el.style.display = 'none';
+        });
+
+        // 2. Perform validation based on the current step
+        // --- Validation for Step 0 (Account) ---
+        if (stepIndex === 0) {
+            inputs.forEach(input => {
+                if (!input.value.trim()) {
+                    isValid = false;
+                    input.classList.add('is-invalid');
+                    const label = currentStepEl.querySelector(`label[for="${input.id}"]`);
+                    const labelText = label ? label.textContent : 'this field';
+                    if (window.showToast) window.showToast(`Please fill out the ${labelText}.`);
+                }
+            });
+        }
+        // --- Validation for Step 1 (Password) ---
+        else if (stepIndex === 1) {
+            const passwordInput = document.getElementById('{{ form.password1.id_for_label }}');
+            const confirmPasswordInput = document.getElementById('{{ form.password2.id_for_label }}');
+            const errorDiv = confirmPasswordInput.parentElement.querySelector('.client-side-error');
+
+            // Check for empty fields first
+            if (!passwordInput.value.trim()) {
+                isValid = false;
+                passwordInput.classList.add('is-invalid');
+                if (window.showToast) window.showToast('Please fill out the Password field.');
+            }
+            if (!confirmPasswordInput.value.trim()) {
+                isValid = false;
+                confirmPasswordInput.classList.add('is-invalid');
+                if (window.showToast) window.showToast('Please fill out the Confirm Password field.');
+            }
+
+            // If both fields are filled but do not match
+            if (passwordInput.value.trim() && confirmPasswordInput.value.trim() && passwordInput.value !== confirmPasswordInput.value) {
+                isValid = false;
+                confirmPasswordInput.classList.add('is-invalid');
+                errorDiv.textContent = 'Passwords do not match.';
+                errorDiv.style.display = 'block';
+            }
+        }
+        return isValid;
+    }
+
+    nextBtn.addEventListener('click', () => {
+        if (validateStep(currentStep)) {
+            // If we are about to move to the final step, populate the review details.
+            if (currentStep === steps.length - 2) { // -2 because steps are 0-indexed
+                populateReviewDetails();
+            }
+            goToStep(currentStep + 1, 'forward');
+        }
+    });
+
+    prevBtn.addEventListener('click', () => {
+        goToStep(currentStep - 1, 'backward');
+    });
+    
+    // Initial setup
+    updateButtons();
+    updateProgress();
+
+    // If there are errors from the server, show the relevant step
+    {% if form.errors %}
+        {% if form.password1.errors or form.password2.errors or form.non_field_errors %}
+            goToStep(1, 'forward');
+        {% else %}
+            // Already at step 0, no need to call goToStep
+        {% endif %}
+        // Hiển thị lỗi từ server nếu có
+        if (window.showToast) {
+            const errorMessages = Object.values({{ form.errors.as_json|safe }}).flat().map(e => e.message).join(' ');
+            if(errorMessages) window.showToast(errorMessages);
+        }
+    {% endif %}
+});
+</script>
+{% endblock main_content %}

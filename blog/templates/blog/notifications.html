@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Your Notifications{% endblock %}
+
+{% block content %}
+<div class="col-lg-8 offset-lg-2">
+    <div class="card">
+        <div class="card-body">
+            <h2 class="card-title mb-4">Notifications</h2>
+            <div class="list-group list-group-flush">
+                {% for notification in notifications %}
+                    <a href="{% url 'blog:post_detail' notification.comment.post.slug %}?comment_id={{ notification.comment.id }}#comment-{{ notification.comment.id }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <p class="mb-1">
+                                <strong>{{ notification.sender.username }}</strong> {{ notification.verb }}
+                            </p>
+                            <small>{{ notification.timestamp|timesince }} ago</small>
+                        </div>
+                        <p class="mb-1 text-muted fst-italic">"{{ notification.comment.body|truncatewords:15 }}"</p>
+                    </a>
+                {% empty %}
+                    <p class="list-group-item">You have no notifications.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

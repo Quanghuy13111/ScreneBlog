@@ -1,0 +1,21 @@
+{% comment %}
+Sử dụng class của Bootstrap và các biến CSS tùy chỉnh từ style.css
+để footer có thể tự động thay đổi theo theme (sáng/tối).
+{% endcomment %}
+<footer>
+    <div class="container">
+        <div class="row align-items-center py-4">
+            <!-- Social Links -->
+            <div class="col-lg-4 text-center text-lg-start mb-3 mb-lg-0 social-icons">
+                <a href="https://github.com/Quanghuy13111" class="social-icon" title="GitHub"><i class="bi bi-github"></i></a>
+            <a href="https://www.tiktok.com/@sybau2514" class="social-icon" title="Tiktok"><i class="bi bi-tiktok"></i></a>
+            <a href="https://www.facebook.com/qhuy131211" class="social-icon" title="Facebook"><i class="bi bi-facebook"></i></a>
+            <a href="https://www.youtube.com/@Tool13337" class="social-icon" title="Youtube"><i class="bi bi-youtube"></i></a>
+            </div>
+            <!-- Copyright -->
+            <div class="col-lg-8 text-center text-lg-end copyright-section">
+                <p class="mb-0 text-body-secondary">&copy; <span id="copyright-year"></span> ScreneBlog. All Rights Reserved.</p>
+            </div>
+        </div>
+    </div>
+</footer>

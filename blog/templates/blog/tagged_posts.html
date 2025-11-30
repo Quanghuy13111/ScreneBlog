@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Posts tagged with "{{ tag.name }}"{% endblock %}
+
+{% block content %}
+    <div class="search-header">
+        <h2>Posts tagged with: <span class="tag-lg">{{ tag.name }}</span></h2>
+        <p>Found {{ posts.count }} post(s).</p>
+    </div>
+
+    <div class="post-grid">
+        {% for post in posts %}
+            <div class="post-card">
+                {% if post.is_image %}
+                    <a href="{{ post.get_absolute_url }}"><img src="{{ post.thumbnail.url }}" alt="{{ post.title }}" class="post-card-image"></a>
+                {% endif %}
+                <div class="post-card-content">
+                    <h2><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></h2>
+                    <p class="post-card-meta">By <strong>{{ post.author.username }}</strong> on {{ post.created|date:"M d, Y" }}</p>
+                    <p class="post-card-excerpt">{{ post.content|striptags|truncatewords:20 }}</p>
+                </div>
+                <div class="post-card-footer">
+                    <a href="{{ post.get_absolute_url }}" class="read-more-btn">Read More</a>
+                </div>
+            </div>
+        {% empty %}
+            <p>No posts found with this tag.</p>
+        {% endfor %}
+    </div>
+{% endblock %}
