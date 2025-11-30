@@ -162,3 +162,6 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ.get('EMAIL_USER', 'your_email@gmail.com')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_APP_PASSWORD', 'your_app_password')
+
+# Cấu hình session để hết hạn khi đóng trình duyệt nếu không chọn "Remember me"
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
