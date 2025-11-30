@@ -94,7 +94,9 @@ def post_detail(request, slug):
                                  .order_by('-same_tags', '-created')[:4] # Lấy 4 bài liên quan nhất
 
     # --- Logic phân trang và tìm bình luận ---
-    top_level_comments = post.comments.filter(active=True, parent__isnull=True).order_by('created')
+    # Tối ưu hóa: Lấy sẵn author và profile của author để tránh N+1 query
+    top_level_comments = post.comments.filter(active=True, parent__isnull=True)\
+                                      .select_related('author__profile').order_by('created')
     comments_per_page = 10 # Số bình luận mỗi trang
 
     # Kiểm tra xem có hash comment trong URL không
