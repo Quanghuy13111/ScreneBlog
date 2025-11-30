@@ -7,8 +7,10 @@ def notifications(request):
     return {}
 
 def active_announcement(request):
-    """
-    Cung cấp thông báo đang hoạt động mới nhất cho tất cả các template.
-    """
-    announcement = Announcement.objects.filter(is_active=True).order_by('-created_at').first()
-    return {'active_announcement': announcement}
+    announcement = Announcement.objects.filter(is_active=True).first()
+    if announcement:
+        # Sử dụng session để kiểm tra xem người dùng đã đóng thông báo này chưa
+        dismissed_key = f'dismissed_announcement_{announcement.id}'
+        if not request.session.get(dismissed_key, False):
+            return {'active_announcement': announcement}
+    return {}

@@ -74,7 +74,8 @@ class Comment(models.Model):
 class Notification(models.Model):
     recipient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications')
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='sent_notifications')
-    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name='+') # Bình luận trả lời
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, null=True, blank=True, related_name='+') # Thông báo liên quan đến bài viết (like, etc.)
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, null=True, blank=True, related_name='+') # Bình luận trả lời
     verb = models.CharField(max_length=255)
     read = models.BooleanField(default=False)
     timestamp = models.DateTimeField(auto_now_add=True)

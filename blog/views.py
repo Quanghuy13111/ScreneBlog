@@ -353,6 +353,12 @@ def like_post(request, slug):
         post.liked_by.add(user)
         post.likes = F('likes') + 1
         liked = True
+        
+        # Tạo thông báo cho tác giả bài viết
+        # Đảm bảo người dùng không tự "like" bài của chính mình và nhận thông báo
+        if user != post.author:
+            verb = f'liked your post: "{post.title}"'
+            Notification.objects.create(recipient=post.author, sender=user, verb=verb, post=post)
 
     post.save()
     post.refresh_from_db()
