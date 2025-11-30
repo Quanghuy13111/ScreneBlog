@@ -85,6 +85,22 @@
                 text-decoration: underline;
                 font-weight: bold;
             }
+            /* --- Scroll to Top Button --- */
+            #scrollToTopBtn {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                z-index: 100;
+                opacity: 0;
+                visibility: hidden;
+                transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+                transform: translateY(20px);
+            }
+            #scrollToTopBtn.show {
+                opacity: 1;
+                visibility: visible;
+                transform: translateY(0);
+            }
         </style>
     {% endcompress %}
     {% block extra_styles %}{% endblock %}
