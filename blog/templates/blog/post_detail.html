@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load blog_extras %}
 {% load form_filters %}
 
 {% block title %}{{ post.title }}{% endblock %}
@@ -32,7 +33,7 @@
                     <div class="ms-2">
                         <a href="{% url 'blog:public_user_profile' post.author.username %}" class="fw-bold text-decoration-none text-body">{{ post.author.username }}</a>
                         <div class="text-body-secondary small">
-                            <span>{{ post.created|date:"F d, Y" }}</span> · <span>{{ post.estimate_reading_time }} min read</span>
+                            <span>{{ post.created|date:"F d, Y" }}</span> · <span>{{ post.content|striptags|reading_time }} min read</span>
                         </div>
                     </div>
                 </div>
@@ -68,7 +69,9 @@
             <div class="post-actions-footer p-3">
                 <!-- Stats -->
                 <div class="d-flex justify-content-between align-items-center text-body-secondary pb-2">
-                    <small><span id="like-count">{{ post.likes }}</span> Likes</small>
+                    <small>
+                        <a href="#" class="text-decoration-none text-body-secondary" data-bs-toggle="modal" data-bs-target="#likersModal"><span id="like-count">{{ post.likes }}</span> Likes</a>
+                    </small>
                     <small>{{ comments.count }} Comments · {{ post.viewer }} Views</small>
                 </div>
                 <hr class="my-1">
@@ -118,6 +121,36 @@
         </div>
         {% endif %}
     </div>
+</div>
+
+<!-- Likers Modal -->
+<div class="modal fade" id="likersModal" tabindex="-1" aria-labelledby="likersModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="likersModalLabel">Liked by</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        {% if post.liked_by.all %}
+            <div class="list-group list-group-flush">
+                {% for user_liker in post.liked_by.all %}
+                    <a href="{% url 'blog:public_user_profile' user_liker.username %}" class="list-group-item list-group-item-action d-flex align-items-center">
+                        {% if user_liker.profile.avatar_thumbnail %}
+                            <img src="{{ user_liker.profile.avatar_thumbnail.url }}" alt="{{ user_liker.username }}" width="40" height="40" class="rounded-circle me-3">
+                        {% else %}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" class="bi bi-person-circle text-body-secondary me-3" viewBox="0 0 16 16"><path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/><path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/></svg>
+                        {% endif %}
+                        <span class="fw-bold">{{ user_liker.username }}</span>
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-center text-muted">This post has no likes yet.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>

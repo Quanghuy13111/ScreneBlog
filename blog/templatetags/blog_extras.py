@@ -1,21 +1,22 @@
-from django import template
-from django.utils.html import strip_tags
 import math
+from django import template
+from django.template.defaultfilters import stringfilter
 
 register = template.Library()
 
-@register.filter(name='calculate_reading_time')
-def calculate_reading_time(html_content):
+@register.filter(name='reading_time')
+@stringfilter
+def reading_time(value):
     """
-    Ước tính thời gian đọc (phút) từ nội dung HTML.
-    Tốc độ đọc trung bình: 200 từ/phút.
+    Ước tính thời gian đọc cho một đoạn văn bản.
+    Giả định tốc độ đọc trung bình là 180 từ mỗi phút.
     """
-    try:
-        # Loại bỏ các thẻ HTML và đếm số từ
-        text_content = strip_tags(html_content)
-        word_count = len(text_content.split())
-        
-        minutes = math.ceil(word_count / 200)
-        return int(minutes) if minutes > 0 else 1 # Trả về ít nhất 1 phút
-    except (ValueError, TypeError):
-        return 1 # Trả về 1 nếu có lỗi
+    if not value:
+        return 1
+
+    word_count = len(value.split())
+    words_per_minute = 180 # Giảm tốc độ đọc để ước tính sát hơn
+    minutes = word_count / words_per_minute
+    read_time = math.ceil(minutes) # Làm tròn lên số nguyên gần nhất
+
+    return read_time if read_time > 0 else 1

@@ -1,28 +1,142 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Your Notifications{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .notification-list .list-group-item {
+        transition: background-color 0.2s ease-in-out;
+        border-left: 4px solid transparent;
+        padding: 1rem 1.25rem;
+    }
+    .notification-list .list-group-item:hover {
+        background-color: rgba(var(--bs-secondary-rgb), 0.05);
+    }
+    .notification-list .list-group-item.unread {
+        background-color: rgba(var(--bs-primary-rgb), 0.08);
+        border-left-color: var(--bs-primary);
+        font-weight: 500;
+    }
+    .notification-avatar {
+        width: 45px;
+        height: 45px;
+        object-fit: cover;
+    }
+    .notification-body {
+        line-height: 1.4;
+    }
+    .notification-timestamp {
+        font-size: 0.8rem;
+        color: var(--bs-secondary-color);
+    }
+    .notification-actions {
+        opacity: 0;
+        transition: opacity 0.2s ease-in-out;
+    }
+    .list-group-item:hover .notification-actions {
+        opacity: 1;
+    }
+    .btn-close {
+        font-size: 0.7rem;
+    }
+    .card-header-actions .btn-link {
+        text-decoration: none;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="col-lg-8 offset-lg-2">
     <div class="card">
-        <div class="card-body">
-            <h2 class="card-title mb-4">Notifications</h2>
-            <div class="list-group list-group-flush">
+        <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+            <h2 class="h4 mb-0">Notifications</h2>
+            <div class="card-header-actions">
+                <button id="mark-all-read" class="btn btn-link btn-sm">Mark all as read</button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="list-group list-group-flush notification-list">
                 {% for notification in notifications %}
-                    <a href="{% url 'blog:post_detail' notification.comment.post.slug %}?comment_id={{ notification.comment.id }}#comment-{{ notification.comment.id }}" class="list-group-item list-group-item-action">
-                        <div class="d-flex w-100 justify-content-between">
-                            <p class="mb-1">
-                                <strong>{{ notification.sender.username }}</strong> {{ notification.verb }}
-                            </p>
-                            <small>{{ notification.timestamp|timesince }} ago</small>
+                    {% if notification.comment and notification.comment.post or notification.post and not notification.comment %}
+                        <div class="list-group-item {% if not notification.read %}unread{% endif %}" data-notification-id="{{ notification.id }}">
+                            <div class="d-flex align-items-start">
+                                <a href="{% url 'blog:public_user_profile' notification.sender.username %}">
+                                    {% if notification.sender.profile.avatar_thumbnail %}
+                                        <img src="{{ notification.sender.profile.avatar_thumbnail.url }}" alt="{{ notification.sender.username }}" class="rounded-circle notification-avatar me-3">
+                                    {% else %}
+                                        <svg class="rounded-circle notification-avatar me-3 bg-secondary-subtle p-1" fill="currentColor" viewBox="0 0 16 16">
+                                            <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+                                            <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
+                                        </svg>
+                                    {% endif %}
+                                </a>
+                                <div class="flex-grow-1">
+                                    <div class="notification-body">
+                                        <a href="{% if notification.comment %}{% url 'blog:post_detail' notification.comment.post.slug %}?comment_id={{ notification.comment.id }}#comment-{{ notification.comment.id }}{% else %}{% url 'blog:post_detail' notification.post.slug %}{% endif %}" class="text-decoration-none text-body">
+                                            <strong>{{ notification.sender.username }}</strong> {{ notification.verb }}.
+                                        </a>
+                                    </div>
+                                    {% if notification.comment %}
+                                        <p class="mb-1 text-muted fst-italic small">"{{ notification.comment.body|truncatewords:15 }}"</p>
+                                    {% endif %}
+                                    <div class="notification-timestamp">{{ notification.timestamp|timesince }} ago</div>
+                                </div>
+                            </div>
                         </div>
-                        <p class="mb-1 text-muted fst-italic">"{{ notification.comment.body|truncatewords:15 }}"</p>
-                    </a>
+                    {% else %}
+                        {# Thông báo cho nội dung đã bị xóa #}
+                        <div class="list-group-item" data-notification-id="{{ notification.id }}">
+                            <div class="d-flex align-items-start">
+                                <div class="flex-grow-1">
+                                    <p class="mb-1 text-muted">This notification is about content that has been deleted.</p>
+                                    <div class="notification-timestamp">{{ notification.timestamp|timesince }} ago</div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
                 {% empty %}
-                    <p class="list-group-item">You have no notifications.</p>
+                    <div class="text-center p-5">
+                        <img src="{% static 'blog/images/no-notifications.svg' %}" alt="No notifications" height="120" class="mb-3">
+                        <h5 class="text-muted">All caught up!</h5>
+                        <p class="text-muted">You have no new notifications.</p>
+                    </div>
                 {% endfor %}
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const markAllReadBtn = document.getElementById('mark-all-read');
+    if (markAllReadBtn) {
+        markAllReadBtn.addEventListener('click', function() {
+            // TODO: Gửi yêu cầu AJAX đến server để đánh dấu tất cả là đã đọc
+            console.log('Marking all as read...');
+            document.querySelectorAll('.list-group-item.unread').forEach(item => {
+                item.classList.remove('unread');
+            });
+            // Có thể thêm logic để vô hiệu hóa nút sau khi nhấn
+        });
+    }
+
+    document.querySelectorAll('.notification-actions .btn-close').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const notificationItem = this.closest('.list-group-item');
+            const notificationId = notificationItem.dataset.notificationId;
+            // TODO: Gửi yêu cầu AJAX đến server để xóa thông báo với ID `notificationId`
+            console.log(`Deleting notification ${notificationId}...`);
+            notificationItem.style.transition = 'opacity 0.5s ease';
+            notificationItem.style.opacity = '0';
+            setTimeout(() => notificationItem.remove(), 500);
+        });
+    });
+});
+</script>
 {% endblock %}

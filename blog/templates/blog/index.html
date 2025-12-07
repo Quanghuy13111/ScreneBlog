@@ -6,45 +6,106 @@
 {% block content %}
     <!-- Featured Post -->
     {% if featured_post %}
-    <div class="card shadow-sm mb-5 animate-on-scroll">
-        <div class="row g-0">
+        <div class="mb-5 animate-on-scroll zoom-in">
             {% if featured_post.is_image %}
-            <div class="col-md-6">
-                <img src="{{ featured_post.thumbnail.url }}" class="img-fluid rounded-start" alt="{{ featured_post.title }}" style="object-fit: cover; height: 100%;">
-            </div>
+                <article class="post-card">
+                    <div class="row g-0">
+                        <div class="col-lg-7">
+                            <div class="post-card-image-container">
+                                <a href="{% url 'blog:post_detail' featured_post.slug %}">
+                                    <img src="{{ featured_post.thumbnail.url }}" class="card-img-top rounded-start" alt="{{ featured_post.title }}" style="aspect-ratio: 16/9; height: 100%;">
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-lg-5 d-flex flex-column">
+                            <div class="card-body p-4">
+                                <h2 class="post-title" style="font-size: 1.75rem;"><a href="{% url 'blog:post_detail' featured_post.slug %}">{{ featured_post.title }}</a></h2>
+                                <p class="card-text text-body-secondary small mb-3">{{ featured_post.created|date:"M d, Y" }} &middot; {{ featured_post.content|striptags|reading_time }} min read</p>
+                                <p class="card-text flex-grow-1">{{ featured_post.content|striptags|truncatewords:30 }}</p>
+                                <div class="post-card-author">
+                                    <a href="{% url 'blog:public_user_profile' featured_post.author.username %}">
+                                        <img src="{{ featured_post.author.profile.avatar_thumbnail.url }}" alt="{{ featured_post.author.username }}">
+                                    </a>
+                                    <div>
+                                        <a href="{% url 'blog:public_user_profile' featured_post.author.username %}" class="text-decoration-none text-body fw-bold small">{{ featured_post.author.username }}</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <a href="{% url 'blog:post_detail' featured_post.slug %}" class="btn btn-sm btn-primary">Read More <i class="bi bi-arrow-right"></i></a>
+                                <div class="d-flex align-items-center gap-3 text-body-secondary">
+                                    <span><i class="bi bi-heart-fill"></i> {{ featured_post.likes }}</span>
+                                    <span><i class="bi bi-chat-dots-fill"></i> {{ featured_post.comments.count }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            {% else %}
+                {# Featured post without image #}
+                <article class="post-card-text-only d-flex flex-column">
+                    <h2 class="post-title mb-3"><a href="{% url 'blog:post_detail' featured_post.slug %}" class="text-decoration-none text-body">{{ featured_post.title }}</a></h2>
+                    <p class="card-text text-body-secondary small mb-3">{{ featured_post.created|date:"M d, Y" }} &middot; {{ featured_post.content|striptags|reading_time }} min read</p>
+                    <p class="card-text flex-grow-1">{{ featured_post.content|striptags|truncatewords:40 }}</p>
+                    <div class="card-footer d-flex justify-content-between align-items-center">
+                        <div class="post-card-author">
+                             <a href="{% url 'blog:public_user_profile' featured_post.author.username %}"><img src="{{ featured_post.author.profile.avatar_thumbnail.url }}" alt="{{ featured_post.author.username }}"></a>
+                             <div><a href="{% url 'blog:public_user_profile' featured_post.author.username %}" class="text-decoration-none text-body fw-bold small">{{ featured_post.author.username }}</a></div>
+                        </div>
+                         <div class="d-flex align-items-center gap-3 text-body-secondary">
+                            <span><i class="bi bi-heart"></i> {{ featured_post.likes }}</span>
+                            <span><i class="bi bi-chat-dots"></i> {{ featured_post.comments.count }}</span>
+                        </div>
+                    </div>
+                </article>
             {% endif %}
-            <div class="{% if featured_post.is_image %}col-md-6{% else %}col-md-12{% endif %} d-flex flex-column">
-                <div class="card-body">
-                    <h2 class="card-title h3"><a href="{% url 'blog:post_detail' featured_post.slug %}" class="text-body text-decoration-none">{{ featured_post.title }}</a></h2>
-                    <p class="card-text text-body-secondary small">
-                        By <strong><a href="{% url 'blog:public_user_profile' featured_post.author.username %}" class="text-body-secondary text-decoration-none">{{ featured_post.author.username }}</a></strong> &middot; {{ featured_post.created|date:"M d, Y" }} &middot; {{ featured_post.content|calculate_reading_time }} min read
-                    </p>
-                    <p class="card-text">{{ featured_post.content|striptags|truncatewords:30 }}</p>
-                </div>
-                <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between align-items-center">
-                    <a href="{% url 'blog:post_detail' featured_post.slug %}" class="btn btn-primary">Read Full Story</a>
-                    <small class="text-body-secondary">{{ featured_post.likes }} likes</small>
-                </div>
-            </div>
         </div>
-    </div>
     {% endif %}
 
     <!-- Regular Posts Grid -->
-    <div class="row row-cols-1 row-cols-md-2 g-4">
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
         {% for post in posts %}
-            <div class="col animate-on-scroll">
-                <div class="card shadow-sm h-100">
-                    {% if post.is_image %}
-                        <a href="{% url 'blog:post_detail' post.slug %}"><img src="{{ post.thumbnail.url }}" alt="{{ post.title }}" class="card-img-top" style="height: 200px; object-fit: cover;"></a>
-                    {% endif %}
-                    <div class="card-body d-flex flex-column">
-                        <h3 class="card-title h5"><a href="{% url 'blog:post_detail' post.slug %}" class="text-body text-decoration-none">{{ post.title }}</a></h3>
-                        <p class="card-text text-body-secondary small">By <strong><a href="{% url 'blog:public_user_profile' post.author.username %}" class="text-body-secondary text-decoration-none">{{ post.author.username }}</a></strong> &middot; {{ post.created|date:"M d, Y" }} &middot; {{ post.content|calculate_reading_time }} min read</p>
-                        <p class="card-text flex-grow-1">{{ post.content|striptags|truncatewords:15 }}</p>
-                        <small class="text-body-secondary">{{ post.likes }} likes</small>
-                    </div>
-                </div>
+            <div class="col animate-on-scroll zoom-in">
+                {% if post.is_image %}
+                    <article class="post-card">
+                        <div class="post-card-image-container">
+                            <a href="{% url 'blog:post_detail' post.slug %}"><img src="{{ post.thumbnail.url }}" alt="{{ post.title }}" class="card-img-top"></a>
+                        </div>
+                        <div class="card-body">
+                            <h3 class="post-title"><a href="{% url 'blog:post_detail' post.slug %}">{{ post.title }}</a></h3>
+                            <p class="card-text flex-grow-1 text-body-secondary mt-2">{{ post.content|striptags|truncatewords:15 }}</p>
+                            <div class="post-card-author">
+                                <a href="{% url 'blog:public_user_profile' post.author.username %}"><img src="{{ post.author.profile.avatar_thumbnail.url }}" alt="{{ post.author.username }}"></a>
+                                <div>
+                                    <a href="{% url 'blog:public_user_profile' post.author.username %}" class="text-decoration-none text-body fw-bold small">{{ post.author.username }}</a>
+                                    <div class="text-body-secondary small">{{ post.created|date:"M d, Y" }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer text-body-secondary">
+                            <span><i class="bi bi-clock"></i> {{ post.content|striptags|reading_time }} min read</span>
+                            <div class="d-flex align-items-center gap-3">
+                                <span><i class="bi bi-heart"></i> {{ post.likes }}</span>
+                                <span><i class="bi bi-chat-dots"></i> {{ post.comments.count }}</span>
+                            </div>
+                        </div>
+                    </article>
+                {% else %}
+                    <article class="post-card-text-only">
+                        <h3 class="post-title"><a href="{% url 'blog:post_detail' post.slug %}" class="text-decoration-none text-body">{{ post.title }}</a></h3>
+                        <p class="card-text flex-grow-1 text-body-secondary my-3">{{ post.content|striptags|truncatewords:25 }}</p>
+                        <div class="card-footer d-flex justify-content-between align-items-center">
+                            <div class="post-card-author">
+                                <a href="{% url 'blog:public_user_profile' post.author.username %}"><img src="{{ post.author.profile.avatar_thumbnail.url }}" alt="{{ post.author.username }}"></a>
+                                <div><a href="{% url 'blog:public_user_profile' post.author.username %}" class="text-decoration-none text-body fw-bold small">{{ post.author.username }}</a></div>
+                            </div>
+                            <div class="d-flex align-items-center gap-3 text-body-secondary small">
+                                <span><i class="bi bi-heart"></i> {{ post.likes }}</span>
+                                <span><i class="bi bi-chat-dots"></i> {{ post.comments.count }}</span>
+                            </div>
+                        </div>
+                    </article>
+                {% endif %}
             </div>
         {% empty %}
             {% if not featured_post %}

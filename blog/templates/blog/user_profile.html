@@ -201,19 +201,22 @@
                     {% if user_posts %}
                         <div class="user-posts-grid">
                             {% for post in user_posts %}
-                                <div class="card shadow-sm h-100">
+                                <article class="post-card shadow-sm">
                                     {% if post.is_image %}
-                                        <a href="{{ post.get_absolute_url }}"><img src="{{ post.thumbnail.url }}" alt="{{ post.title }}" class="card-img-top" style="height: 150px; object-fit: cover;"></a>
+                                        <a href="{{ post.get_absolute_url }}"><img src="{{ post.thumbnail.url }}" alt="{{ post.title }}" class="card-img-top"></a>
                                     {% endif %}
-                                    <div class="card-body d-flex flex-column">
-                                        <h5 class="card-title h6"><a href="{{ post.get_absolute_url }}" class="text-body text-decoration-none">{{ post.title }}</a></h5>
-                                        <p class="card-text text-body-secondary small flex-grow-1">{{ post.created|date:"M d, Y" }}</p>
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <a href="{% url 'blog:post_edit' post.slug %}" class="btn btn-sm btn-outline-secondary">Edit</a>
-                                            <small class="text-body-secondary">{{ post.likes }} likes</small>
+                                    <div class="card-body">
+                                        <h5 class="card-title h6 post-title"><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></h5>
+                                        <p class="card-text text-body-secondary small flex-grow-1 mt-2">{{ post.created|date:"M d, Y" }}</p>
+                                    </div>
+                                    <div class="card-footer d-flex justify-content-between align-items-center">
+                                        <a href="{% url 'blog:post_edit' post.slug %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                        <div class="text-body-secondary small">
+                                            <span title="Likes"><i class="bi bi-heart-fill"></i> {{ post.likes }}</span>
+                                            <span class="ms-2" title="Reading time"><i class="bi bi-clock"></i> {{ post.content|striptags|reading_time }} min</span>
                                         </div>
                                     </div>
-                                </div>
+                                </article>
                             {% endfor %}
                         </div>
                     {% else %}
