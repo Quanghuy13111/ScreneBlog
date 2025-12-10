@@ -1,101 +1,129 @@
 {% extends 'base.html' %}
 {% load blog_extras %}
 {% load form_filters %}
-
+ 
 {% block title %}Profile & Settings{% endblock %}
-
+ 
 {% block extra_styles %}
 <style>
     /* --- Profile Page Specific Styles --- */
     .profile-grid {
         display: grid;
         grid-template-columns: 1fr;
-        gap: 2rem;
+        gap: 1.5rem;
     }
     @media (min-width: 992px) {
         .profile-grid {
-            grid-template-columns: 320px 1fr;
+            grid-template-columns: 350px 1fr;
+            gap: 2rem;
         }
     }
-
+ 
     /* --- Profile Card (Left Column) --- */
     .profile-card {
         position: sticky;
         top: 100px; /* Adjust based on your sticky header height */
         text-align: center;
-        padding: 2rem;
     }
     .profile-avatar-wrapper {
         position: relative;
         width: 150px;
         height: 150px;
         margin: 0 auto 1.5rem;
+        cursor: pointer;
     }
     .profile-avatar {
         width: 100%;
         height: 100%;
         object-fit: cover;
         border-radius: 50%;
-        border: 4px solid var(--bs-primary);
-        box-shadow: 0 4px 15px rgba(var(--bs-primary-rgb), 0.3);
+        border: 5px solid var(--bs-body-bg);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        transition: transform 0.3s ease;
     }
-    .profile-card h4 {
+    .profile-avatar-wrapper:hover .profile-avatar {
+        transform: scale(1.05);
+    }
+    .avatar-upload-overlay {
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        width: 36px;
+        height: 36px;
+        background-color: var(--bs-primary);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid var(--bs-body-bg);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        transition: transform 0.3s ease;
+    }
+    .profile-avatar-wrapper:hover .avatar-upload-overlay {
+        transform: scale(1.1);
+    }
+    .profile-card h5 {
         font-weight: 700;
         margin-bottom: 0.25rem;
     }
-    .profile-card .text-body-secondary {
-        font-size: 0.9rem;
+    .profile-card .text-muted {
+        font-size: 0.9rem; /* text-body-secondary is now text-muted */
     }
-
+    .profile-bio {
+        font-size: 0.95rem;
+        margin-top: 1rem;
+        padding: 0 1rem;
+    }
+ 
     /* --- Stats Section --- */
     .profile-stats {
         display: flex;
         justify-content: space-around;
-        margin-top: 2rem;
-        padding-top: 1.5rem;
+        margin-top: 1.5rem;
+        padding: 1.5rem 0;
         border-top: 1px solid var(--bs-border-color);
     }
     .stat-item {
         text-align: center;
     }
     .stat-number {
-        font-size: 1.75rem;
+        font-size: 1.5rem;
         font-weight: 700;
         color: var(--bs-primary);
         line-height: 1;
     }
     .stat-label {
         font-size: 0.8rem;
-        text-transform: uppercase;
         color: var(--bs-secondary-color);
+        margin-top: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
     }
-
+ 
     /* --- Content Panel (Right Column) --- */
-    .content-panel .card-header {
-        background-color: transparent;
-        padding: 0;
-        border-bottom: 2px solid var(--bs-border-color);
-    }
-    .content-panel .nav-tabs {
-        border-bottom: none;
-    }
-    .content-panel .nav-tabs .nav-link {
-        border: none;
-        border-bottom: 2px solid transparent;
-        margin-bottom: -2px;
+    .content-panel .nav-pills .nav-link {
         font-weight: 600;
-        color: var(--bs-secondary-color);
         transition: all 0.2s ease-in-out;
+        border-radius: 0.5rem;
+        color: var(--bs-secondary-color);
     }
-    .content-panel .nav-tabs .nav-link.active,
-    .content-panel .nav-tabs .nav-link:hover {
-        color: var(--bs-primary);
-        border-bottom-color: var(--bs-primary);
+    .content-panel .nav-pills .nav-link.active,
+    .content-panel .nav-pills .nav-link:hover {
+        color: var(--bs-primary-contrast);
+        background-color: var(--bs-primary);
     }
     .content-panel .tab-pane {
-        padding-top: 2rem;
+        padding-top: 1.5rem;
     }
-
+    .content-panel h4 {
+        font-weight: 600;
+        border-bottom: 2px solid var(--bs-primary);
+        padding-bottom: 0.5rem;
+        display: inline-block;
+    }
+ 
     /* --- Floating Label Form Style --- */
     .form-floating > .form-control,
     .form-floating > .form-select {
@@ -105,60 +133,78 @@
     .form-floating > label {
         padding: 1rem 0.75rem;
     }
-
+    .form-control:focus {
+        box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.2);
+    }
+ 
     /* --- My Posts Grid --- */
     .user-posts-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
         gap: 1.5rem;
+    }
+    .post-card {
+        border-bottom: none;
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    .post-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--bs-box-shadow-lg) !important;
     }
 </style>
 {% endblock %}
-
+ 
 {% block content %}
 <div class="profile-grid">
     <!-- Left Column: Profile Card -->
-    <div class="card profile-card animate-on-scroll fade-in-left">
-        <div class="card-body">
-            <div class="profile-avatar-wrapper">
+    <div class="card profile-card border-0 shadow-sm animate-on-scroll fade-in-left">
+        <div class="card-body p-4">
+            <div class="profile-avatar-wrapper" onclick="document.getElementById('{{ p_form.avatar.id_for_label }}').click();" title="Change Avatar">
                 <img id="avatarPreview" src="{{ user.profile.avatar_thumbnail.url }}" alt="{{ user.username }}'s avatar" class="profile-avatar">
+                <div class="avatar-upload-overlay"><i class="bi bi-camera-fill"></i></div>
             </div>
-            <h4>{{ user.username }}</h4>
-            <p class="text-body-secondary">Joined on {{ user.date_joined|date:"F Y" }}</p>
-
+            <h5 class="card-title">{{ user.username }}</h5>
+            <p class="text-muted mb-1">{{ user.email }}</p>
+            {% if user.profile.birth_date %}
+                <p class="text-muted mb-1">Born on {{ user.profile.birth_date|date:"F d, Y" }}</p>
+            {% endif %}
+            <p class="text-muted">Joined on {{ user.date_joined|date:"F Y" }}</p>
+            {% if user.profile.bio %}
+                <p class="profile-bio text-body-secondary fst-italic">"{{ user.profile.bio }}"</p>
+            {% endif %}
+ 
             <div class="profile-stats">
                 <div class="stat-item">
                     <div class="stat-number" data-target="{{ total_posts }}">0</div>
-                    <div class="stat-label">Posts</div>
+                    <div class="stat-label"><i class="bi bi-pencil-square"></i> Posts</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-number" data-target="{{ total_likes_received }}">0</div>
-                    <div class="stat-label">Likes</div>
+                    <div class="stat-label"><i class="bi bi-heart"></i> Likes</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-number" data-target="{{ total_comments_made }}">0</div>
-                    <div class="stat-label">Comments</div>
+                    <div class="stat-label"><i class="bi bi-chat-dots"></i> Comments</div>
                 </div>
             </div>
         </div>
     </div>
-
+ 
     <!-- Right Column: Content Panel -->
-    <div class="card content-panel animate-on-scroll fade-in-right">
-        <div class="card-header">
-            <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+    <div class="card content-panel border-0 shadow-sm animate-on-scroll fade-in-right">
+        <div class="card-body p-4 p-lg-5">
+            <ul class="nav nav-pills mb-4" id="profileTabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-content" type="button" role="tab">Update Profile</button>
+                    <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-content" type="button" role="tab"><i class="bi bi-person-circle me-2"></i>Profile</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="posts-tab" data-bs-toggle="tab" data-bs-target="#posts-content" type="button" role="tab">My Posts</button>
+                    <button class="nav-link" id="posts-tab" data-bs-toggle="tab" data-bs-target="#posts-content" type="button" role="tab"><i class="bi bi-collection me-2"></i>My Posts</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="security-tab" data-bs-toggle="tab" data-bs-target="#security-content" type="button" role="tab">Security</button>
+                    <button class="nav-link" id="security-tab" data-bs-toggle="tab" data-bs-target="#security-content" type="button" role="tab"><i class="bi bi-shield-lock me-2"></i>Security</button>
                 </li>
             </ul>
-        </div>
-        <div class="card-body p-lg-4">
+ 
             {% if messages %}
                 {% for message in messages %}
                     <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">{{ message }}
@@ -166,54 +212,61 @@
                     </div>
                 {% endfor %}
             {% endif %}
-
+ 
             <div class="tab-content" id="profileTabsContent">
                 <!-- Profile Update Tab -->
                 <div class="tab-pane fade show active" id="profile-content" role="tabpanel">
-                    <h4 class="mb-4">Profile Information</h4>
+                    <h4 class="mb-4">Edit Information</h4>
                     <form method="post" enctype="multipart/form-data" novalidate>
                         {% csrf_token %}
                         <div class="row g-3">
                             <div class="col-md-6 form-floating">
-                                {{ u_form.username|attr:"class:form-control|placeholder:Username" }}
+                                {{ u_form.username|attr:"class:form-control placeholder:Username" }}
                                 <label for="{{ u_form.username.id_for_label }}">{{ u_form.username.label }}</label>
                             </div>
                             <div class="col-md-6 form-floating">
-                                {{ u_form.email|attr:"class:form-control|placeholder:Email" }}
+                                {{ u_form.email|attr:"class:form-control placeholder:Email" }}
                                 <label for="{{ u_form.email.id_for_label }}">{{ u_form.email.label }}</label>
                             </div>
-                            <div class="col-12">
-                                <label for="{{ p_form.avatar.id_for_label }}" class="form-label">{{ p_form.avatar.label }}</label>
-                                {{ p_form.avatar|attr:"class:form-control" }}
+                            <div class="col-md-6 form-floating">
+                                {{ p_form.birth_date|attr:"class:form-control type:date placeholder:Birth Date" }}
+                                <label for="{{ p_form.birth_date.id_for_label }}">{{ p_form.birth_date.label }}</label>
+                            </div>
+                            <div class="col-md-6 form-floating">
+                                {{ p_form.gender|attr:"class:form-select placeholder:Gender" }}
+                                <label for="{{ p_form.gender.id_for_label }}">{{ p_form.gender.label }}</label>
                             </div>
                             <div class="col-12 form-floating">
-                                {{ p_form.bio|attr:"class:form-control|placeholder:Bio|style:height: 100px" }}
+                                {{ p_form.bio|attr:"class:form-control placeholder:Bio style:height: 100px" }}
                                 <label for="{{ p_form.bio.id_for_label }}">{{ p_form.bio.label }}</label>
+                            </div>
+                            <div class="col-12 d-none">
+                                {{ p_form.avatar|attr:"class:d-none" }}
                             </div>
                         </div>
                         <button type="submit" name="update_profile" class="btn btn-primary mt-4">Save Changes</button>
                     </form>
                 </div>
-
+ 
                 <!-- My Posts Tab -->
                 <div class="tab-pane fade" id="posts-content" role="tabpanel">
                     <h4 class="mb-4">Your Contributions</h4>
                     {% if user_posts %}
                         <div class="user-posts-grid">
                             {% for post in user_posts %}
-                                <article class="post-card shadow-sm">
+                                <article class="card post-card shadow-sm h-100">
                                     {% if post.is_image %}
                                         <a href="{{ post.get_absolute_url }}"><img src="{{ post.thumbnail.url }}" alt="{{ post.title }}" class="card-img-top"></a>
                                     {% endif %}
-                                    <div class="card-body">
+                                    <div class="card-body d-flex flex-column">
                                         <h5 class="card-title h6 post-title"><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></h5>
                                         <p class="card-text text-body-secondary small flex-grow-1 mt-2">{{ post.created|date:"M d, Y" }}</p>
                                     </div>
-                                    <div class="card-footer d-flex justify-content-between align-items-center">
+                                    <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between align-items-center">
                                         <a href="{% url 'blog:post_edit' post.slug %}" class="btn btn-sm btn-outline-secondary">Edit</a>
                                         <div class="text-body-secondary small">
                                             <span title="Likes"><i class="bi bi-heart-fill"></i> {{ post.likes }}</span>
-                                            <span class="ms-2" title="Reading time"><i class="bi bi-clock"></i> {{ post.content|striptags|reading_time }} min</span>
+                                            <span class="ms-2" title="Reading time"><i class="bi bi-clock"></i> {{ post.reading_time }} min</span>
                                         </div>
                                     </div>
                                 </article>
@@ -223,27 +276,27 @@
                         <div class="alert alert-secondary text-center">You haven't written any posts yet. <a href="{% url 'blog:post_create' %}" class="alert-link">Create one now!</a></div>
                     {% endif %}
                 </div>
-
+ 
                 <!-- Security Tab -->
                 <div class="tab-pane fade" id="security-content" role="tabpanel">
                     <h4 class="mb-4">Change Password</h4>
                     <p class="text-body-secondary">It's a good idea to use a strong password that you're not using elsewhere.</p>
                     <form method="post" class="mt-4" novalidate>
                         {% csrf_token %}
-                        <div class="form-floating mb-3">
-                            {{ password_form.old_password|attr:"class:form-control|placeholder:Old Password" }}
+                        <div class="form-floating mb-3 position-relative">
+                            {{ password_form.old_password|attr:"class:form-control placeholder:Old Password" }}
                             <label for="{{ password_form.old_password.id_for_label }}">{{ password_form.old_password.label }}</label>
-                            {% if password_form.old_password.errors %}<div class="invalid-feedback d-block">{{ password_form.old_password.errors.as_text }}</div>{% endif %}
+                            {% for error in password_form.old_password.errors %}<div class="invalid-tooltip d-block">{{ error }}</div>{% endfor %}
                         </div>
-                        <div class="form-floating mb-3">
-                            {{ password_form.new_password1|attr:"class:form-control|placeholder:New Password" }}
+                        <div class="form-floating mb-3 position-relative">
+                            {{ password_form.new_password1|attr:"class:form-control placeholder:New Password" }}
                             <label for="{{ password_form.new_password1.id_for_label }}">{{ password_form.new_password1.label }}</label>
-                            {% if password_form.new_password1.errors %}<div class="invalid-feedback d-block">{{ password_form.new_password1.errors.as_text }}</div>{% endif %}
+                            {% for error in password_form.new_password1.errors %}<div class="invalid-tooltip d-block">{{ error }}</div>{% endfor %}
                         </div>
-                        <div class="form-floating mb-3">
-                            {{ password_form.new_password2|attr:"class:form-control|placeholder:Confirm New Password" }}
+                        <div class="form-floating mb-3 position-relative">
+                            {{ password_form.new_password2|attr:"class:form-control placeholder:Confirm New Password" }}
                             <label for="{{ password_form.new_password2.id_for_label }}">{{ password_form.new_password2.label }}</label>
-                            {% if password_form.new_password2.errors %}<div class="invalid-feedback d-block">{{ password_form.new_password2.errors.as_text }}</div>{% endif %}
+                            {% for error in password_form.new_password2.errors %}<div class="invalid-tooltip d-block">{{ error }}</div>{% endfor %}
                         </div>
                         <button type="submit" name="change_password" class="btn btn-primary mt-3">Change Password</button>
                     </form>
@@ -252,7 +305,7 @@
         </div>
     </div>
 </div>
-
+ 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     // --- Avatar Preview Logic ---
@@ -270,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
+ 
     // --- Animated Counter for Stats ---
     const counterObserver = new IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
@@ -278,11 +331,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const el = entry.target;
                 const target = +el.getAttribute('data-target');
                 let current = 0;
-                const increment = target / 100; // Adjust speed of animation
-
+                const duration = 1500; // 1.5 seconds
+                const increment = target / (duration / 16);
+ 
                 const updateCounter = () => {
                     if (current < target) {
-                        current += increment;
+                        current = Math.min(current + increment, target);
                         el.innerText = Math.ceil(current);
                         requestAnimationFrame(updateCounter);
                     } else {
@@ -293,7 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 observer.unobserve(el); // Animate only once
             }
         });
-    }, { threshold: 0.5 });
+    }, { threshold: 0.8 });
 
     document.querySelectorAll('.stat-number').forEach(counter => {
         counterObserver.observe(counter);

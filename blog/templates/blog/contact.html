@@ -119,8 +119,8 @@
         background-color: transparent;
         border: none;
         border-bottom: 2px solid rgba(var(--bs-emphasis-color-rgb), 0.3);
-        border-radius: 0;
-        padding: 10px 0;
+        border-radius: 0; /* Giữ nguyên */
+        padding: 10px 0 10px 5px; /* Thêm padding bên trái để chữ không bị dính vào label */
         font-size: 1rem;
         transition: border-color 0.3s ease;
     }
@@ -137,15 +137,12 @@
         color: var(--bs-secondary-color);
     }
     .form-control:focus ~ .form-label,
-    .form-control:not(:placeholder-shown) ~ .form-label {
+    .form-control:not(:placeholder-shown) ~ .form-label,
+    .form-control[value]:not([value=""]) ~ .form-label { /* For pre-filled values */
         top: -20px;
         left: 0;
         font-size: 0.85rem;
         color: var(--bs-primary);
-    }
-    /* Hide default placeholder for our custom label to work */
-    .form-control::placeholder {
-        color: transparent;
     }
     .btn-submit {
         transition: all 0.3s ease;
@@ -202,19 +199,19 @@
                     
                     <!-- Name Field -->
                     <div class="form-group">
-                        {{ form.name|attr:"class:form-control|placeholder:Your Name" }}
+                        {{ form.name|attr:"class:form-control|placeholder: " }}
                         <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
                     </div>
 
                     <!-- Email Field -->
                     <div class="form-group">
-                        {{ form.email|attr:"class:form-control|placeholder:Your Email" }}
+                        {{ form.email|attr:"class:form-control|placeholder: " }}
                         <label for="{{ form.email.id_for_label }}" class="form-label">{{ form.email.label }}</label>
                     </div>
 
                     <!-- Message Field -->
                     <div class="form-group">
-                        {{ form.message|attr:"class:form-control|rows:4|placeholder:Your Message" }}
+                        {{ form.message|attr:"class:form-control|rows:4|placeholder: " }}
                         <label for="{{ form.message.id_for_label }}" class="form-label">{{ form.message.label }}</label>
                     </div>
 
