@@ -52,5 +52,14 @@ class SignupForm(UserCreationForm):
     }))
 
     class Meta:
-        model = User
-        fields = ("username", "email")
+        model = User # Kế thừa từ UserCreationForm.Meta để có các trường mật khẩu
+        fields = UserCreationForm.Meta.fields + ('email',)
+
+    def clean_email(self):
+        """
+        Kiểm tra xem email đã được sử dụng chưa.
+        """
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("Địa chỉ email này đã được sử dụng. Vui lòng chọn một email khác.")
+        return email

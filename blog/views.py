@@ -289,9 +289,8 @@ def user_profile(request):
             else:
                 messages.error(request, 'Please correct the profile errors below.')
     else:
-        # Khởi tạo form với dữ liệu hiện tại cho GET request
-        u_form = UserUpdateForm(request.POST, instance=request.user)
-        p_form = ProfileUpdateForm(request.POST, request.FILES, instance=profile)
+        # Với GET request, form đã được khởi tạo ở trên với instance, không cần làm gì thêm.
+        pass
 
     # Lấy danh sách bài viết và tính toán các thống kê
     user_posts = Post.objects.filter(author=request.user).order_by('-created')
