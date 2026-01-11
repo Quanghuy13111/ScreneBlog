@@ -3,7 +3,9 @@ from .models import Notification, Announcement
 def notifications(request):
     if request.user.is_authenticated:
         # Lấy tất cả thông báo của người dùng, sắp xếp từ mới nhất đến cũ nhất
-        all_notifications = Notification.objects.filter(recipient=request.user).order_by('-timestamp')
+        all_notifications = Notification.objects.filter(recipient=request.user)\
+                                                .select_related('sender', 'post', 'comment__post')\
+                                                .order_by('-timestamp')
         # Đếm số thông báo chưa đọc
         unread_count = all_notifications.filter(read=False).count()
         # Lấy 5 thông báo gần nhất để hiển thị trong dropdown

@@ -14,18 +14,23 @@ from django.utils.text import slugify
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
 from django.contrib.auth.models import User
-from django.db.models import F, Q
+from django.db.models import F, Q, Count
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.admin.views.decorators import staff_member_required
 from .forms import SignupForm
 
 def index(request):
-    all_posts = Post.objects.select_related('author').filter(created__lte=timezone.now()).order_by('-created')
+    # Tối ưu: select_related profile để lấy avatar, annotate để đếm comment
+    base_qs = Post.objects.select_related('author__profile')\
+                          .filter(created__lte=timezone.now())\
+                          .annotate(num_comments=Count('comments'))
+
+    all_posts = base_qs.order_by('-created')
     
     # Logic mới: Bài viết nổi bật là bài có nhiều likes nhất trong 7 ngày qua
     one_week_ago = timezone.now() - timedelta(days=7)
-    featured_post = Post.objects.filter(created__gte=one_week_ago).order_by('-likes', '-created').first()
+    featured_post = base_qs.filter(created__gte=one_week_ago).order_by('-likes', '-created').first()
 
     # Nếu không có bài nào trong 7 ngày qua, lấy bài mới nhất làm bài nổi bật
     if not featured_post:
@@ -77,7 +82,9 @@ def contact(request):
 
 
 def post_detail(request, slug):
-    post = get_object_or_404(Post, slug=slug)
+    # Tối ưu: Lấy luôn thông tin author và profile, đếm comment
+    queryset = Post.objects.select_related('author__profile').annotate(num_comments=Count('comments'))
+    post = get_object_or_404(queryset, slug=slug)
     
     # Tăng lượt xem mỗi khi có người truy cập
     post.viewer = F('viewer') + 1
@@ -89,8 +96,7 @@ def post_detail(request, slug):
     related_posts = Post.objects.filter(tags__in=post_tags_ids)\
                                 .exclude(id=post.id)
     # Đếm số lượng tag chung và sắp xếp
-    from django.db.models import Count
-    related_posts = related_posts.annotate(same_tags=Count('tags'))\
+    related_posts = related_posts.select_related('author').annotate(same_tags=Count('tags'))\
                                  .order_by('-same_tags', '-created')[:4] # Lấy 4 bài liên quan nhất
 
     # --- Logic phân trang và tìm bình luận ---
@@ -317,17 +323,29 @@ def search_view(request):
     if query:
         # Tìm kiếm không phân biệt chữ hoa/thường trong cả tiêu đề và nội dung
         results = Post.objects.filter(
-            Q(title__icontains=query) | Q(content__icontains=query)
-        ).select_related('author').order_by('-created').distinct()
+            Q(title__icontains=query) | Q(tags__name__icontains=query)
+        ).select_related('author__profile').annotate(num_comments=Count('comments')).order_by('-created').distinct()
 
     return render(request, 'blog/search_results.html', {
         'query': query,
         'results': results
     })
+    
+def search_posts(request):
+    query = request.GET.get('q')
+    results = []
+    
+    if query:
+        results = Post.objects.filter(
+            Q(title__icontains=query) | 
+            Q(tags__name__icontains=query)  # <--- Add this line to search by tag
+        ).distinct() # distinct() is important to avoid duplicate results
+        
+    return render(request, 'blog/search_results.html', {'results': results, 'query': query})
 
 def tagged_posts(request, tag_slug):
     tag = get_object_or_404(Tag, slug=tag_slug)
-    posts = Post.objects.filter(tags__in=[tag]).select_related('author').order_by('-created')
+    posts = Post.objects.filter(tags__in=[tag]).select_related('author__profile').annotate(num_comments=Count('comments')).order_by('-created')
     
     context = {
         'tag': tag,
@@ -391,6 +409,8 @@ def public_user_profile(request, username):
     # Tối ưu hóa: Lấy trước các tags liên quan để tránh N+1 query
     user_posts = Post.objects.filter(author=user)\
                              .prefetch_related('tags')\
+                             .select_related('author__profile')\
+                             .annotate(num_comments=Count('comments'))\
                              .order_by('-created')
 
     context = {
@@ -463,7 +483,7 @@ def live_search(request):
     results = []
     if query and len(query) > 2: # Chỉ tìm kiếm khi query có hơn 2 ký tự
         posts = Post.objects.filter(
-            Q(title__icontains=query) | Q(content__icontains=query)
+            Q(title__icontains=query) | Q(tags__name__icontains=query)
         ).select_related('author').order_by('-created').distinct()[:5] # Giới hạn 5 kết quả
 
         for post in posts:

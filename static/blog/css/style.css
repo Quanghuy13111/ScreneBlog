@@ -286,10 +286,12 @@ main {
     padding: 0.5rem 1rem;
 }
 .comment-bubble {
-    background-color: var(--bg-color);
+    background-color: var(--secondary-bg-color); /* Nổi bật trên nền xám */
     border-radius: 18px;
-    padding: 0.5rem 1rem;
+    padding: 0.75rem 1rem;
     width: fit-content;
+    position: relative;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 .comment-bubble p {
     font-family: var(--font-sans-serif);
@@ -299,6 +301,11 @@ main {
 }
 .comment-body .text-body-secondary {
     font-size: 0.8rem;
+}
+.comment-item .replies {
+    padding-left: 2.5rem;
+    border-left: 2px solid var(--border-color);
+    margin-left: 1rem;
 }
 
 /* 5. Buttons
@@ -467,3 +474,146 @@ footer a:hover {
     visibility: visible;
     transform: translateY(0);
 }
+
+/* --- MODERN POST DETAIL STYLES --- */
+
+/* Reading Progress Bar */
+.reading-progress-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: transparent;
+    z-index: 9999;
+}
+.reading-progress-bar {
+    height: 100%;
+    background: var(--accent-color);
+    width: 0%;
+    transition: width 0.1s;
+}
+
+/* Hero Section */
+.post-hero {
+    margin-bottom: 3rem;
+}
+.post-hero-meta img {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+}
+.post-hero-title {
+    font-size: 2.5rem; /* Larger title */
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 1.5rem;
+}
+@media (min-width: 992px) {
+    .post-hero-title { font-size: 3.5rem; }
+}
+
+/* Content Layout */
+.article-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+}
+@media (min-width: 992px) {
+    .article-layout {
+        grid-template-columns: 60px 1fr 300px; /* Actions - Content - Sidebar */
+        gap: 3rem;
+    }
+}
+
+/* Floating Actions (Left) */
+.floating-actions {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: var(--secondary-bg-color);
+    padding: 1rem;
+    border-top: 1px solid var(--border-color);
+    z-index: 100;
+}
+@media (min-width: 992px) {
+    .floating-actions {
+        flex-direction: column;
+        justify-content: flex-start;
+        position: sticky;
+        top: 100px;
+        bottom: auto;
+        width: auto;
+        background: transparent;
+        padding: 0;
+        border: none;
+        gap: 1.5rem;
+    }
+}
+.action-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--secondary-text-color);
+    background-color: var(--bg-color);
+    transition: all 0.2s ease;
+    border: 1px solid var(--border-color);
+    position: relative;
+}
+.action-btn:hover {
+    color: var(--accent-color);
+    transform: scale(1.1);
+    border-color: var(--accent-color);
+}
+.action-btn.active {
+    color: #e0245e;
+    border-color: #e0245e;
+    background-color: rgba(224, 36, 94, 0.1);
+}
+
+/* Typography & Content */
+.article-content {
+    font-family: var(--font-serif); /* Serif for better reading experience */
+    font-size: 1.2rem;
+    line-height: 1.8;
+    color: var(--text-color);
+}
+.article-content h2 { margin-top: 2.5rem; margin-bottom: 1rem; font-weight: 700; }
+.article-content h3 { margin-top: 2rem; margin-bottom: 1rem; font-weight: 600; }
+.article-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 1.5rem 0; }
+.article-content blockquote {
+    border-left: 4px solid var(--accent-color);
+    padding-left: 1.5rem;
+    font-style: italic;
+    color: var(--secondary-text-color);
+    margin: 2rem 0;
+    font-size: 1.3rem;
+}
+
+/* Table of Contents Styles */
+.toc-sticky {
+    position: sticky;
+    top: 100px;
+}
+.toc-link {
+    display: block;
+    padding: 0.3rem 0;
+    color: var(--secondary-text-color);
+    font-size: 0.9rem;
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    padding-left: 1rem;
+    transition: all 0.2s;
+}
+.toc-link:hover, .toc-link.active {
+    color: var(--accent-color);
+    border-left-color: var(--accent-color);
+}
+.toc-link.h3-link { padding-left: 2rem; }

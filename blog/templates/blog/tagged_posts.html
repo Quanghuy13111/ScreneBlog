@@ -12,7 +12,7 @@
         {% for post in posts %}
             <div class="post-card">
                 {% if post.is_image %}
-                    <a href="{{ post.get_absolute_url }}"><img src="{{ post.thumbnail.url }}" alt="{{ post.title }}" class="post-card-image"></a>
+                    <a href="{{ post.get_absolute_url }}"><img src="{{ post.thumbnail.url }}" alt="{{ post.title }}" class="post-card-image" loading="lazy"></a>
                 {% endif %}
                 <div class="post-card-content">
                     <h2><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></h2>
