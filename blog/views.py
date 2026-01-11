@@ -294,6 +294,15 @@ def user_profile(request):
                 return redirect('blog:user_profile')
             else:
                 messages.error(request, 'Please correct the profile errors below.')
+
+        elif 'delete_avatar' in request.POST:
+            # Kiểm tra nếu avatar hiện tại không phải là default thì mới xóa
+            if profile.avatar.name != 'profile_pics/default.jpg':
+                profile.avatar.delete(save=False) # Xóa file ảnh cũ khỏi hệ thống
+                profile.avatar = 'profile_pics/default.jpg' # Gán lại ảnh mặc định
+                profile.save()
+                messages.success(request, 'Your avatar has been reset to default.')
+            return redirect('blog:user_profile')
     else:
         # Với GET request, form đã được khởi tạo ở trên với instance, không cần làm gì thêm.
         pass
@@ -318,17 +327,25 @@ def user_profile(request):
 
 def search_view(request):
     query = request.GET.get('q', '')
+    search_type = request.GET.get('type', 'all') # Lấy loại tìm kiếm, mặc định là 'all'
     results = Post.objects.none() # Mặc định là không có kết quả
 
     if query:
-        # Tìm kiếm không phân biệt chữ hoa/thường trong cả tiêu đề và nội dung
-        results = Post.objects.filter(
-            Q(title__icontains=query) | Q(tags__name__icontains=query)
-        ).select_related('author__profile').annotate(num_comments=Count('comments')).order_by('-created').distinct()
+        # Xây dựng điều kiện lọc dựa trên search_type
+        if search_type == 'tag':
+            filter_condition = Q(tags__name__icontains=query)
+        elif search_type == 'title':
+            filter_condition = Q(title__icontains=query)
+        else:
+            # Mặc định: Tìm trong cả tiêu đề và tags
+            filter_condition = Q(title__icontains=query) | Q(tags__name__icontains=query)
+
+        results = Post.objects.filter(filter_condition).select_related('author__profile').annotate(num_comments=Count('comments')).order_by('-created').distinct()
 
     return render(request, 'blog/search_results.html', {
         'query': query,
-        'results': results
+        'results': results,
+        'search_type': search_type
     })
     
 def search_posts(request):
